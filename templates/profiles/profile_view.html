@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if is_own_profile %}Your Profile{% else %}{{ profile.user.get_full_name }}'s Profile{% endif %} - Shared Housing Platform
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-4 mb-4">
+            <!-- Profile Card -->
+            <div class="card profile-card shadow">
+                <div class="card-header text-center">
+                    {% if profile.profile_picture %}
+                        <img src="{{ profile.profile_picture.url }}" alt="Profile Picture"
+                             class="rounded-circle mb-3" width="100" height="100" style="object-fit: cover;">
+                    {% else %}
+                        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                             style="width: 100px; height: 100px; font-size: 2rem;">
+                            {{ profile.user.first_name|first }}{{ profile.user.last_name|first }}
+                        </div>
+                    {% endif %}
+                    <h4 class="mb-1">{{ profile.user.get_full_name }}</h4>
+                    <p class="text-muted mb-2">
+                        {% if profile.age %}{{ profile.age }} years old{% endif %}
+                        {% if profile.occupation %}• {{ profile.occupation }}{% endif %}
+                    </p>
+                    <div class="d-flex justify-content-center gap-2">
+                        {% if profile.user.email_verified %}
+                            <span class="badge bg-success">Email Verified</span>
+                        {% endif %}
+                        {% if profile.phone_verified %}
+                            <span class="badge bg-success">Phone Verified</span>
+                        {% endif %}
+                        {% if profile.id_verified %}
+                            <span class="badge bg-primary">ID Verified</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if is_own_profile %}
+                        <div class="d-grid gap-2 mb-3">
+                            <a href="{% url 'profiles:profile_edit' %}" class="btn btn-primary">
+                                <i class="bi bi-pencil-square me-1"></i>Edit Profile
+                            </a>
+                        </div>
+
+                        <div class="mb-3">
+                            <h6>Profile Completion</h6>
+                            <div class="progress mb-2" style="height: 8px;">
+                                <div class="progress-bar" style="width: {{ profile.completion_percentage }}%"></div>
+                            </div>
+                            <small class="text-muted">{{ profile.completion_percentage }}% complete</small>
+                        </div>
+                    {% else %}
+                        {% if can_message %}
+                            <div class="d-grid gap-2 mb-3">
+                                <a href="#" class="btn btn-primary">
+                                    <i class="bi bi-chat-dots me-1"></i>Send Message
+                                </a>
+                                <a href="#" class="btn btn-outline-success">
+                                    <i class="bi bi-heart me-1"></i>Add to Favorites
+                                </a>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="border-end">
+                                <div class="fw-bold">{{ profile.profile_views }}</div>
+                                <small class="text-muted">Views</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border-end">
+                                <div class="fw-bold">85%</div>
+                                <small class="text-muted">Match</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="fw-bold">3</div>
+                            <small class="text-muted">Photos</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <!-- About Section -->
+            {% if profile.bio %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-person me-2"></i>About</h5>
+                </div>
+                <div class="card-body">
+                    <p>{{ profile.bio|linebreaks }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Lifestyle & Preferences -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-house-heart me-2"></i>Lifestyle & Preferences</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% if profile.cleanliness_level %}
+                        <div class="col-md-6 mb-3">
+                            <h6>Cleanliness Level</h6>
+                            <div class="progress" style="height: 10px;">
+                                <div class="progress-bar bg-info" style="width: {{ profile.cleanliness_level }}0%"></div>
+                            </div>
+                            <small class="text-muted">{{ profile.cleanliness_level }}/10</small>
+                        </div>
+                        {% endif %}
+
+                        {% if profile.social_level %}
+                        <div class="col-md-6 mb-3">
+                            <h6>Social Level</h6>
+                            <div class="progress" style="height: 10px;">
+                                <div class="progress-bar bg-success" style="width: {{ profile.social_level }}0%"></div>
+                            </div>
+                            <small class="text-muted">{{ profile.social_level }}/10</small>
+                        </div>
+                        {% endif %}
+
+                        {% if profile.noise_tolerance %}
+                        <div class="col-md-6 mb-3">
+                            <h6>Noise Tolerance</h6>
+                            <div class="progress" style="height: 10px;">
+                                <div class="progress-bar bg-warning" style="width: {{ profile.noise_tolerance }}0%"></div>
+                            </div>
+                            <small class="text-muted">{{ profile.noise_tolerance }}/10</small>
+                        </div>
+                        {% endif %}
+
+                        <div class="col-md-6 mb-3">
+                            <h6>Habits</h6>
+                            <div class="d-flex flex-wrap gap-1">
+                                <span class="badge bg-light text-dark">{{ profile.get_smoker_display|default:"Smoking: Not specified" }}</span>
+                                <span class="badge bg-light text-dark">{{ profile.get_drinking_display|default:"Drinking: Not specified" }}</span>
+                                <span class="badge bg-light text-dark">{{ profile.get_pets_display|default:"Pets: Not specified" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Housing & Budget -->
+            {% if profile.min_budget or profile.max_budget %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-currency-dollar me-2"></i>Budget & Housing</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <h6>Budget Range</h6>
+                            <p class="mb-0">
+                                {% if profile.min_budget and profile.max_budget %}
+                                    ${{ profile.min_budget }} - ${{ profile.max_budget }} per week
+                                {% elif profile.min_budget %}
+                                    From ${{ profile.min_budget }} per week
+                                {% elif profile.max_budget %}
+                                    Up to ${{ profile.max_budget }} per week
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <h6>Room Preference</h6>
+                            <p class="mb-0">{{ profile.get_preferred_room_type_display|default:"Not specified" }}</p>
+                        </div>
+                        {% if profile.move_in_date %}
+                        <div class="col-md-6 mb-3">
+                            <h6>Move-in Date</h6>
+                            <p class="mb-0">{{ profile.move_in_date }}</p>
+                        </div>
+                        {% endif %}
+                        {% if profile.lease_duration %}
+                        <div class="col-md-6 mb-3">
+                            <h6>Lease Duration</h6>
+                            <p class="mb-0">{{ profile.get_lease_duration_display }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Interests & Languages -->
+            {% if profile.interests or profile.languages %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-star me-2"></i>Interests & Languages</h5>
+                </div>
+                <div class="card-body">
+                    {% if profile.interests %}
+                    <div class="mb-3">
+                        <h6>Interests</h6>
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for interest in profile.interests %}
+                                <span class="badge bg-primary">{{ interest }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if profile.languages %}
+                    <div>
+                        <h6>Languages</h6>
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for language in profile.languages %}
+                                <span class="badge bg-info">{{ language }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Location Preferences -->
+            {% if profile.preferred_locations %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Location Preferences</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-1">
+                        {% for location in profile.preferred_locations %}
+                            <span class="badge bg-success">{{ location }}</span>
+                        {% endfor %}
+                    </div>
+                    {% if profile.max_commute_time %}
+                        <small class="text-muted mt-2 d-block">
+                            Maximum commute: {{ profile.max_commute_time }} minutes
+                        </small>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

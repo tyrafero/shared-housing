@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(source:*)",
+      "Bash(pip install:*)",
+      "Bash(django-admin startproject:*)",
+      "Bash(python manage.py startapp:*)",
+      "Bash(DJANGO_SETTINGS_MODULE=temp_settings python manage.py startapp accounts)",
+      "Bash(DJANGO_SETTINGS_MODULE=temp_settings python manage.py startapp profiles)",
+      "Bash(DJANGO_SETTINGS_MODULE=temp_settings python manage.py startapp matching)",
+      "Bash(DJANGO_SETTINGS_MODULE=temp_settings python manage.py startapp properties)",
+      "Bash(DJANGO_SETTINGS_MODULE=temp_settings python manage.py startapp messaging)",
+      "Bash(DJANGO_SETTINGS_MODULE=temp_settings python manage.py startapp groups)",
+      "Bash(DJANGO_SETTINGS_MODULE=temp_settings python manage.py startapp applications)",
+      "Bash(DJANGO_SETTINGS_MODULE=temp_settings python manage.py startapp core)",
+      "Bash(python manage.py:*)",
+      "Bash(echo:*)",
+      "Bash(python3:*)",
+      "Bash(python:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

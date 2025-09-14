@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Sign Up - Shared Housing Platform{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white text-center">
+                    <h3 class="mb-0"><i class="bi bi-person-plus me-2"></i>Create Account</h3>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.first_name|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.last_name|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.email|as_crispy_field }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.user_type|as_crispy_field }}
+                            <small class="form-text text-muted">
+                                Choose your primary use of the platform
+                            </small>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.password1|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.password2|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.terms_accepted }}
+                                <label class="form-check-label" for="{{ form.terms_accepted.id_for_label }}">
+                                    I agree to the <a href="#" class="text-primary">Terms of Service</a> *
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.privacy_accepted }}
+                                <label class="form-check-label" for="{{ form.privacy_accepted.id_for_label }}">
+                                    I agree to the <a href="#" class="text-primary">Privacy Policy</a> *
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-check">
+                                {{ form.marketing_consent }}
+                                <label class="form-check-label" for="{{ form.marketing_consent.id_for_label }}">
+                                    I would like to receive marketing communications
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2 mb-3">
+                            <i class="bi bi-person-plus me-2"></i>Create Account
+                        </button>
+
+                        <div class="text-center">
+                            <p class="text-muted mb-0">
+                                Already have an account?
+                                <a href="{% url 'accounts:login' %}" class="text-primary text-decoration-none">Sign in</a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,364 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Profile Setup - Step {{ step_number }} - Shared Housing Platform{% endblock %}
+
+{% block extra_head %}
+<style>
+    .step-indicator {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+    }
+
+    .step-item {
+        flex: 1;
+        text-align: center;
+        position: relative;
+    }
+
+    .step-item:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        top: 15px;
+        right: -50%;
+        width: 100%;
+        height: 2px;
+        background-color: #dee2e6;
+        z-index: -1;
+    }
+
+    .step-item.completed::after {
+        background-color: #28a745;
+    }
+
+    .step-circle {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background-color: #dee2e6;
+        color: #6c757d;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.875rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    .step-item.active .step-circle {
+        background-color: #007bff;
+        color: white;
+    }
+
+    .step-item.completed .step-circle {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .range-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Progress Indicator -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="step-indicator">
+                        {% for i in "123456"|make_list %}
+                            {% with step_num=i|add:0 %}
+                            <div class="step-item
+                                {% if step_num < step_number %}completed
+                                {% elif step_num == step_number %}active{% endif %}">
+                                <div class="step-circle">
+                                    {% if step_num < step_number %}
+                                        <i class="bi bi-check"></i>
+                                    {% else %}
+                                        {{ step_num }}
+                                    {% endif %}
+                                </div>
+                                <div class="step-label small">
+                                    {% if step_num == 1 %}Personal
+                                    {% elif step_num == 2 %}Location
+                                    {% elif step_num == 3 %}Budget
+                                    {% elif step_num == 4 %}Lifestyle
+                                    {% elif step_num == 5 %}Roommates
+                                    {% elif step_num == 6 %}About{% endif %}
+                                </div>
+                            </div>
+                            {% endwith %}
+                        {% endfor %}
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar" style="width: {{ progress_percentage }}%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Form -->
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-person-gear me-2"></i>
+                        Step {{ step_number }}: {{ step_title }}
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        {% if step == 'personal' %}
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.date_of_birth|as_crispy_field }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.gender|as_crispy_field }}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.occupation|as_crispy_field }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.education_level|as_crispy_field }}
+                                </div>
+                            </div>
+
+                        {% elif step == 'location' %}
+                            <div class="mb-3">
+                                {{ form.preferred_locations_input|as_crispy_field }}
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.max_commute_time|as_crispy_field }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="form-check mt-4">
+                                        {{ form.has_car }}
+                                        <label class="form-check-label" for="{{ form.has_car.id_for_label }}">
+                                            I have a car
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                        {% elif step == 'budget' %}
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.min_budget|as_crispy_field }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.max_budget|as_crispy_field }}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.preferred_room_type|as_crispy_field }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.lease_duration|as_crispy_field }}
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                {{ form.move_in_date|as_crispy_field }}
+                            </div>
+
+                        {% elif step == 'lifestyle' %}
+                            <div class="mb-4">
+                                <label class="form-label">{{ form.cleanliness_level.label }}</label>
+                                {{ form.cleanliness_level }}
+                                <output>{{ form.cleanliness_level.value|default:5 }}</output>
+                                <div class="range-labels">
+                                    <span>Very Messy</span>
+                                    <span>Extremely Clean</span>
+                                </div>
+                                <small class="form-text text-muted">{{ form.cleanliness_level.help_text }}</small>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label">{{ form.noise_tolerance.label }}</label>
+                                {{ form.noise_tolerance }}
+                                <output>{{ form.noise_tolerance.value|default:5 }}</output>
+                                <div class="range-labels">
+                                    <span>Need Quiet</span>
+                                    <span>Don't Mind Noise</span>
+                                </div>
+                                <small class="form-text text-muted">{{ form.noise_tolerance.help_text }}</small>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label">{{ form.social_level.label }}</label>
+                                {{ form.social_level }}
+                                <output>{{ form.social_level.value|default:5 }}</output>
+                                <div class="range-labels">
+                                    <span>Very Private</span>
+                                    <span>Very Social</span>
+                                </div>
+                                <small class="form-text text-muted">{{ form.social_level.help_text }}</small>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    {{ form.smoker|as_crispy_field }}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    {{ form.drinking|as_crispy_field }}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    {{ form.pets|as_crispy_field }}
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.schedule_type|as_crispy_field }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="form-check mt-4">
+                                        {{ form.works_from_home }}
+                                        <label class="form-check-label" for="{{ form.works_from_home.id_for_label }}">
+                                            I work from home
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                        {% elif step == 'roommates' %}
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.preferred_age_min|as_crispy_field }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.preferred_age_max|as_crispy_field }}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.preferred_gender|as_crispy_field }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.max_roommates|as_crispy_field }}
+                                </div>
+                            </div>
+
+                        {% elif step == 'about' %}
+                            <div class="mb-3">
+                                {{ form.bio|as_crispy_field }}
+                            </div>
+                            <div class="mb-3">
+                                {{ form.interests_input|as_crispy_field }}
+                            </div>
+                            <div class="mb-3">
+                                {{ form.languages_input|as_crispy_field }}
+                            </div>
+                            <div class="mb-3">
+                                {{ form.profile_picture|as_crispy_field }}
+                            </div>
+                        {% endif %}
+
+                        <!-- Navigation Buttons -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <div>
+                                {% if step_number > 1 %}
+                                    {% if step == 'location' %}
+                                        <a href="{% url 'profiles:setup_step' step='personal' %}" class="btn btn-outline-secondary">
+                                            <i class="bi bi-arrow-left me-1"></i>Previous
+                                        </a>
+                                    {% elif step == 'budget' %}
+                                        <a href="{% url 'profiles:setup_step' step='location' %}" class="btn btn-outline-secondary">
+                                            <i class="bi bi-arrow-left me-1"></i>Previous
+                                        </a>
+                                    {% elif step == 'lifestyle' %}
+                                        <a href="{% url 'profiles:setup_step' step='budget' %}" class="btn btn-outline-secondary">
+                                            <i class="bi bi-arrow-left me-1"></i>Previous
+                                        </a>
+                                    {% elif step == 'roommates' %}
+                                        <a href="{% url 'profiles:setup_step' step='lifestyle' %}" class="btn btn-outline-secondary">
+                                            <i class="bi bi-arrow-left me-1"></i>Previous
+                                        </a>
+                                    {% elif step == 'about' %}
+                                        <a href="{% url 'profiles:setup_step' step='roommates' %}" class="btn btn-outline-secondary">
+                                            <i class="bi bi-arrow-left me-1"></i>Previous
+                                        </a>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+
+                            <div>
+                                {% if step != 'personal' and step != 'budget' %}
+                                    <form method="post" action="{% url 'profiles:skip_step' step=step %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-outline-warning me-2"
+                                                onclick="return confirm('Are you sure you want to skip this step? You can always complete it later.')">
+                                            Skip <i class="bi bi-arrow-right ms-1"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
+
+                                <button type="submit" class="btn btn-primary">
+                                    {% if step == 'about' %}
+                                        Complete Profile <i class="bi bi-check-circle ms-1"></i>
+                                    {% else %}
+                                        Continue <i class="bi bi-arrow-right ms-1"></i>
+                                    {% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Help Section -->
+            <div class="card mt-4 border-info">
+                <div class="card-body">
+                    <h6 class="card-title text-info">
+                        <i class="bi bi-info-circle me-1"></i>Why do we need this information?
+                    </h6>
+                    <p class="card-text small text-muted">
+                        {% if step == 'personal' %}
+                            Personal information helps us verify your identity and show your basic details to potential roommates.
+                        {% elif step == 'location' %}
+                            Location preferences help us find roommates who want to live in similar areas and understand your commute needs.
+                        {% elif step == 'budget' %}
+                            Budget information is crucial for matching you with roommates who have compatible financial expectations.
+                        {% elif step == 'lifestyle' %}
+                            Lifestyle compatibility is key to successful roommate relationships. This helps us match you with like-minded people.
+                        {% elif step == 'roommates' %}
+                            These preferences help us find roommates who fit your ideal living situation.
+                        {% elif step == 'about' %}
+                            Your bio and interests help potential roommates get to know you better and decide if you'd be a good match.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update range slider outputs in real-time
+    const ranges = document.querySelectorAll('input[type="range"]');
+    ranges.forEach(range => {
+        range.addEventListener('input', function() {
+            const output = this.nextElementSibling;
+            if (output && output.tagName === 'OUTPUT') {
+                output.value = this.value;
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Edit Profile - Shared Housing Platform{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-3 mb-4">
+            <!-- Section Navigation -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Edit Sections</h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for sec in valid_sections %}
+                        <a href="?section={{ sec }}"
+                           class="list-group-item list-group-item-action {% if sec == section %}active{% endif %}">
+                            {% if sec == 'personal' %}<i class="bi bi-person me-2"></i>Personal Info
+                            {% elif sec == 'location' %}<i class="bi bi-geo-alt me-2"></i>Location
+                            {% elif sec == 'budget' %}<i class="bi bi-currency-dollar me-2"></i>Budget & Housing
+                            {% elif sec == 'lifestyle' %}<i class="bi bi-heart me-2"></i>Lifestyle
+                            {% elif sec == 'roommates' %}<i class="bi bi-people me-2"></i>Roommate Prefs
+                            {% elif sec == 'about' %}<i class="bi bi-chat-square-text me-2"></i>About Yourself{% endif %}
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-body text-center">
+                    <h6>Profile Completion</h6>
+                    <div class="progress mb-2" style="height: 10px;">
+                        <div class="progress-bar" style="width: {{ profile.completion_percentage }}%"></div>
+                    </div>
+                    <small class="text-muted">{{ profile.completion_percentage }}% complete</small>
+                    <div class="mt-2">
+                        <a href="{% url 'profiles:profile_view' %}" class="btn btn-sm btn-outline-primary">
+                            View Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-9">
+            <!-- Edit Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        Edit {% if section == 'personal' %}Personal Information
+                        {% elif section == 'location' %}Location Preferences
+                        {% elif section == 'budget' %}Budget & Housing
+                        {% elif section == 'lifestyle' %}Lifestyle & Habits
+                        {% elif section == 'roommates' %}Roommate Preferences
+                        {% elif section == 'about' %}About Yourself{% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'profiles:profile_view' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Back to Profile
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg me-1"></i>Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

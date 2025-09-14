@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Activate Your SharedHousing Account</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #0d6efd, #0056b3);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }
+        .content {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 0 0 10px 10px;
+        }
+        .button {
+            display: inline-block;
+            background: #0d6efd;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏠 Welcome to SharedHousing!</h1>
+    </div>
+    <div class="content">
+        <p>Hi {{ user.get_short_name }},</p>
+
+        <p>Thank you for joining SharedHousing! To complete your registration and start finding your perfect shared accommodation, please verify your email address by clicking the button below:</p>
+
+        <div style="text-align: center;">
+            <a href="{{ protocol }}://{{ domain }}{% url 'accounts:verify_email' uidb64=uid token=token %}" class="button">
+                Verify Email Address
+            </a>
+        </div>
+
+        <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
+        <p><a href="{{ protocol }}://{{ domain }}{% url 'accounts:verify_email' uidb64=uid token=token %}">{{ protocol }}://{{ domain }}{% url 'accounts:verify_email' uidb64=uid token=token %}</a></p>
+
+        <p>Once verified, you'll be able to:</p>
+        <ul>
+            <li>Create your detailed profile</li>
+            <li>Find compatible roommates</li>
+            <li>Browse available properties</li>
+            <li>Join roommate groups</li>
+            <li>Apply for properties together</li>
+        </ul>
+
+        <p>If you didn't create this account, please ignore this email.</p>
+
+        <p>Welcome to the community!<br>
+        The SharedHousing Team</p>
+    </div>
+
+    <div class="footer">
+        <p>This email was sent by SharedHousing Platform</p>
+        <p>If you have any questions, contact us at support@shared-housing.com</p>
+    </div>
+</body>
+</html>

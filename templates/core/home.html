@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+
+{% block title %}SharedHousing - Find Your Perfect Shared Accommodation{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">
+                    Find Your Perfect <span class="text-warning">Shared Accommodation</span>
+                </h1>
+                <p class="lead mb-4">
+                    Connect with compatible roommates and discover amazing shared housing opportunities in Sydney and Darwin.
+                    Smart matching, secure communication, and coordinated applications.
+                </p>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a href="{% url 'accounts:register' %}" class="btn btn-warning btn-lg px-4">
+                        <i class="bi bi-person-plus me-2"></i>Get Started
+                    </a>
+                    <a href="{% url 'accounts:login' %}" class="btn btn-outline-light btn-lg px-4">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center">
+                <div class="mt-5 mt-lg-0">
+                    <i class="bi bi-house-heart display-1 text-warning"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-lg-8 mx-auto">
+                <h2 class="fw-bold mb-3">Why Choose SharedHousing?</h2>
+                <p class="text-muted">
+                    We make finding shared accommodation simple, safe, and stress-free with our intelligent platform.
+                </p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 text-center">
+                    <div class="card-body p-4">
+                        <div class="mb-3">
+                            <i class="bi bi-people-fill text-primary" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="card-title">Smart Matching</h5>
+                        <p class="card-text text-muted">
+                            Our compatibility algorithm connects you with like-minded roommates based on lifestyle, budget, and preferences.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 text-center">
+                    <div class="card-body p-4">
+                        <div class="mb-3">
+                            <i class="bi bi-shield-check text-success" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="card-title">Secure & Verified</h5>
+                        <p class="card-text text-muted">
+                            All users undergo verification processes. Secure messaging and privacy controls keep you safe.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 text-center">
+                    <div class="card-body p-4">
+                        <div class="mb-3">
+                            <i class="bi bi-house-door text-info" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="card-title">Property Integration</h5>
+                        <p class="card-text text-muted">
+                            Browse properties from multiple real estate sites. Apply as a group with your matched roommates.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 text-center">
+                    <div class="card-body p-4">
+                        <div class="mb-3">
+                            <i class="bi bi-chat-dots text-warning" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="card-title">Real-time Chat</h5>
+                        <p class="card-text text-muted">
+                            Connect instantly with potential roommates through our built-in messaging system.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 text-center">
+                    <div class="card-body p-4">
+                        <div class="mb-3">
+                            <i class="bi bi-calendar-check text-danger" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="card-title">Group Coordination</h5>
+                        <p class="card-text text-muted">
+                            Coordinate viewings, share wishlists, and make group decisions with built-in collaboration tools.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 text-center">
+                    <div class="card-body p-4">
+                        <div class="mb-3">
+                            <i class="bi bi-geo-alt text-primary" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="card-title">Location Focused</h5>
+                        <p class="card-text text-muted">
+                            Specialized for Sydney and Darwin markets with local insights and neighborhood guides.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-lg-8 mx-auto">
+                <h2 class="fw-bold mb-3">How It Works</h2>
+                <p class="text-muted">Getting started is simple. Follow these easy steps to find your ideal shared accommodation.</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6 text-center">
+                <div class="mb-3">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                        <span class="fw-bold fs-4">1</span>
+                    </div>
+                </div>
+                <h5>Create Profile</h5>
+                <p class="text-muted">Set up your profile with preferences, budget, and lifestyle information.</p>
+            </div>
+
+            <div class="col-lg-3 col-md-6 text-center">
+                <div class="mb-3">
+                    <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                        <span class="fw-bold fs-4">2</span>
+                    </div>
+                </div>
+                <h5>Get Matched</h5>
+                <p class="text-muted">Our algorithm finds compatible roommates based on your preferences.</p>
+            </div>
+
+            <div class="col-lg-3 col-md-6 text-center">
+                <div class="mb-3">
+                    <div class="bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                        <span class="fw-bold fs-4">3</span>
+                    </div>
+                </div>
+                <h5>Connect & Chat</h5>
+                <p class="text-muted">Message potential roommates and form groups for property hunting.</p>
+            </div>
+
+            <div class="col-lg-3 col-md-6 text-center">
+                <div class="mb-3">
+                    <div class="bg-warning text-dark rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                        <span class="fw-bold fs-4">4</span>
+                    </div>
+                </div>
+                <h5>Find & Apply</h5>
+                <p class="text-muted">Browse properties together and submit coordinated group applications.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5 bg-primary text-white">
+    <div class="container text-center">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <h2 class="fw-bold mb-3">Ready to Find Your Perfect Share House?</h2>
+                <p class="lead mb-4">
+                    Join thousands of users who have found their ideal shared accommodation through our platform.
+                </p>
+                <a href="{% url 'accounts:register' %}" class="btn btn-warning btn-lg px-5">
+                    <i class="bi bi-rocket-takeoff me-2"></i>Start Your Journey
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
