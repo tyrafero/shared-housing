@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Connect with {{ other_user.get_short_name }} - SharedHousing{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="d-flex align-items-center mb-4">
+                <a href="{% url 'matching:find_roommates' %}" class="btn btn-outline-secondary me-3">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
+                <div>
+                    <h1 class="h3 mb-1">Connect with {{ other_user.get_short_name }}?</h1>
+                    <p class="text-muted mb-0">Start a conversation and begin your roommate journey</p>
+                </div>
+            </div>
+
+            <!-- User Profile Card -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-2 text-center">
+                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center mx-auto"
+                                 style="width: 80px; height: 80px;">
+                                <i class="bi bi-person text-white" style="font-size: 2rem;"></i>
+                            </div>
+                        </div>
+                        <div class="col-md-7">
+                            <h4 class="mb-1">{{ other_user.get_full_name }}</h4>
+                            {% if other_user.profile.bio %}
+                                <p class="text-muted mb-2">{{ other_user.profile.bio|truncatechars:150 }}</p>
+                            {% endif %}
+
+                            <!-- Quick Details -->
+                            <div class="row small text-muted">
+                                {% if other_user.profile.age %}
+                                    <div class="col-auto">
+                                        <i class="bi bi-person"></i> {{ other_user.profile.age }} years old
+                                    </div>
+                                {% endif %}
+                                {% if other_user.profile.occupation %}
+                                    <div class="col-auto">
+                                        <i class="bi bi-briefcase"></i> {{ other_user.profile.occupation }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            {% if compatibility_score %}
+                                <div class="text-center">
+                                    <div class="h2 mb-0 text-{% if compatibility_score.overall_score >= 80 %}success{% elif compatibility_score.overall_score >= 60 %}warning{% else %}muted{% endif %}">
+                                        {{ compatibility_score.overall_score|floatformat:0 }}%
+                                    </div>
+                                    <small class="text-muted">Compatibility</small>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compatibility Highlights -->
+            {% if compatibility_score %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">Why This Could Be a Great Match</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="small">Budget Compatibility</span>
+                                        <span class="small fw-bold">{{ compatibility_score.budget_score|floatformat:0 }}%</span>
+                                    </div>
+                                    <div class="progress" style="height: 4px;">
+                                        <div class="progress-bar {% if compatibility_score.budget_score >= 70 %}bg-success{% elif compatibility_score.budget_score >= 40 %}bg-warning{% else %}bg-danger{% endif %}"
+                                             style="width: {{ compatibility_score.budget_score }}%"></div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="small">Lifestyle Match</span>
+                                        <span class="small fw-bold">{{ compatibility_score.lifestyle_score|floatformat:0 }}%</span>
+                                    </div>
+                                    <div class="progress" style="height: 4px;">
+                                        <div class="progress-bar {% if compatibility_score.lifestyle_score >= 70 %}bg-success{% elif compatibility_score.lifestyle_score >= 40 %}bg-warning{% else %}bg-danger{% endif %}"
+                                             style="width: {{ compatibility_score.lifestyle_score }}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="small">Location Preferences</span>
+                                        <span class="small fw-bold">{{ compatibility_score.location_score|floatformat:0 }}%</span>
+                                    </div>
+                                    <div class="progress" style="height: 4px;">
+                                        <div class="progress-bar {% if compatibility_score.location_score >= 70 %}bg-success{% elif compatibility_score.location_score >= 40 %}bg-warning{% else %}bg-danger{% endif %}"
+                                             style="width: {{ compatibility_score.location_score }}%"></div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="small">Living Habits</span>
+                                        <span class="small fw-bold">{{ compatibility_score.habits_score|floatformat:0 }}%</span>
+                                    </div>
+                                    <div class="progress" style="height: 4px;">
+                                        <div class="progress-bar {% if compatibility_score.habits_score >= 70 %}bg-success{% elif compatibility_score.habits_score >= 40 %}bg-warning{% else %}bg-danger{% endif %}"
+                                             style="width: {{ compatibility_score.habits_score }}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Connection Actions -->
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="mb-3">Ready to Connect?</h5>
+                    <p class="text-muted mb-4">
+                        Connecting with {{ other_user.get_short_name }} will:
+                    </p>
+                    <ul class="list-unstyled mb-4">
+                        <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Start a private conversation</li>
+                        <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Share your compatibility scores</li>
+                        <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Let them know you're interested</li>
+                        <li class="mb-0"><i class="bi bi-check-circle text-success me-2"></i>Begin planning your shared housing journey</li>
+                    </ul>
+
+                    <div class="d-flex gap-3">
+                        <form method="post" class="flex-fill">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success btn-lg w-100">
+                                <i class="bi bi-chat-dots me-2"></i>Connect & Start Chat
+                            </button>
+                        </form>
+
+                        <a href="{% url 'matching:compatibility_detail' other_user.id %}" class="btn btn-outline-primary btn-lg">
+                            <i class="bi bi-bar-chart"></i> View Details
+                        </a>
+                    </div>
+
+                    <div class="text-center mt-3">
+                        <a href="{% url 'matching:find_roommates' %}" class="text-muted text-decoration-none">
+                            <i class="bi bi-arrow-left me-1"></i>Back to browsing
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate progress bars
+    const progressBars = document.querySelectorAll('.progress-bar');
+    progressBars.forEach(bar => {
+        const width = bar.style.width;
+        bar.style.width = '0%';
+        setTimeout(() => {
+            bar.style.transition = 'width 1s ease-out';
+            bar.style.width = width;
+        }, 300);
+    });
+});
+</script>
+{% endblock %}

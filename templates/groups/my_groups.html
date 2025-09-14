@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Groups - SharedHousing{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-2">My Groups</h1>
+            <p class="text-muted">{{ memberships|length }} group{{ memberships|length|pluralize }} you're part of</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'groups:create_group' %}" class="btn btn-primary me-2">
+                <i class="bi bi-plus-circle"></i> Create Group
+            </a>
+            <a href="{% url 'groups:group_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-search"></i> Browse Groups
+            </a>
+        </div>
+    </div>
+
+    {% if memberships %}
+        <!-- Groups Grid -->
+        <div class="row">
+            {% for membership in memberships %}
+                {% with group=membership.group %}
+                    <div class="col-lg-6 col-xl-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">{{ group.name }}</h6>
+                                <div class="d-flex align-items-center">
+                                    {% if membership.is_admin %}
+                                        <span class="badge bg-warning me-2">Admin</span>
+                                    {% endif %}
+                                    <span class="badge
+                                        {% if group.status == 'forming' %}bg-primary
+                                        {% elif group.status == 'active' %}bg-success
+                                        {% elif group.status == 'house_hunting' %}bg-info
+                                        {% elif group.status == 'housed' %}bg-success
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ group.get_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="card-body">
+                                <!-- Group Description -->
+                                {% if group.description %}
+                                    <p class="text-muted small mb-3">{{ group.description|truncatechars:100 }}</p>
+                                {% endif %}
+
+                                <!-- Group Stats -->
+                                <div class="row mb-3">
+                                    <div class="col-4 text-center">
+                                        <div class="h5 mb-0">{{ group.current_member_count }}</div>
+                                        <small class="text-muted">Members</small>
+                                    </div>
+                                    <div class="col-4 text-center">
+                                        <div class="h5 mb-0">{{ group.available_spots }}</div>
+                                        <small class="text-muted">Available</small>
+                                    </div>
+                                    <div class="col-4 text-center">
+                                        <div class="h5 mb-0">{{ group.property_applications.count }}</div>
+                                        <small class="text-muted">Applications</small>
+                                    </div>
+                                </div>
+
+                                <!-- Group Details -->
+                                <div class="mb-3">
+                                    {% if group.target_budget_min and group.target_budget_max %}
+                                        <p class="mb-1 small">
+                                            <i class="bi bi-currency-dollar text-muted"></i>
+                                            ${{ group.target_budget_min }} - ${{ group.target_budget_max }}/week budget
+                                        </p>
+                                    {% endif %}
+
+                                    {% if group.preferred_locations %}
+                                        <p class="mb-1 small">
+                                            <i class="bi bi-geo-alt text-muted"></i>
+                                            {% for location in group.preferred_locations|slice:":2" %}
+                                                {{ location }}{% if not forloop.last %}, {% endif %}
+                                            {% endfor %}
+                                            {% if group.preferred_locations|length > 2 %}
+                                                +{{ group.preferred_locations|length|add:"-2" }} more
+                                            {% endif %}
+                                        </p>
+                                    {% endif %}
+
+                                    {% if group.required_bedrooms %}
+                                        <p class="mb-1 small">
+                                            <i class="bi bi-door-open text-muted"></i>
+                                            {{ group.required_bedrooms }} bedroom{{ group.required_bedrooms|pluralize }}
+                                            {% if group.required_bathrooms %}• {{ group.required_bathrooms }} bathroom{{ group.required_bathrooms|pluralize }}{% endif %}
+                                        </p>
+                                    {% endif %}
+
+                                    {% if group.move_in_date %}
+                                        <p class="mb-1 small">
+                                            <i class="bi bi-calendar text-muted"></i>
+                                            Move in: {{ group.move_in_date|date:"M d, Y" }}
+                                        </p>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Progress Bar -->
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between small mb-1">
+                                        <span>Group Progress</span>
+                                        <span>{{ group.current_member_count }}/{{ group.max_members }}</span>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar"
+                                             style="width: {% widthratio group.current_member_count group.max_members 100 %}%"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Recent Activity -->
+                                {% if group.activities.all %}
+                                    <div class="mb-3">
+                                        <h6 class="small text-muted mb-2">RECENT ACTIVITY</h6>
+                                        {% for activity in group.activities.all|slice:":2" %}
+                                            <div class="d-flex align-items-center mb-1">
+                                                <i class="bi bi-dot text-muted"></i>
+                                                <small class="text-muted">{{ activity.description }}</small>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="card-footer bg-transparent">
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'groups:group_detail' group.id %}"
+                                       class="btn btn-primary flex-fill">
+                                        View Details
+                                    </a>
+                                    <a href="{% url 'groups:group_chat' group.id %}"
+                                       class="btn btn-outline-primary">
+                                        <i class="bi bi-chat"></i>
+                                    </a>
+                                    {% if membership.is_admin or membership.can_manage_applications %}
+                                        <a href="{% url 'groups:manage_membership_requests' group.id %}"
+                                           class="btn btn-outline-secondary">
+                                            <i class="bi bi-gear"></i>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endwith %}
+            {% endfor %}
+        </div>
+
+        <!-- Group Actions -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">Group Management</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <i class="bi bi-plus-circle-fill text-primary fs-2"></i>
+                            <h6 class="mt-2">Create New Group</h6>
+                            <p class="text-muted small">Start a new roommate group</p>
+                            <a href="{% url 'groups:create_group' %}" class="btn btn-sm btn-primary">Create Group</a>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <i class="bi bi-search text-info fs-2"></i>
+                            <h6 class="mt-2">Find Groups</h6>
+                            <p class="text-muted small">Join existing groups</p>
+                            <a href="{% url 'groups:group_list' %}" class="btn btn-sm btn-outline-info">Browse Groups</a>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <i class="bi bi-envelope text-success fs-2"></i>
+                            <h6 class="mt-2">Invitations</h6>
+                            <p class="text-muted small">Check pending invites</p>
+                            <a href="{% url 'groups:my_invitations' %}" class="btn btn-sm btn-outline-success">View Invites</a>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <i class="bi bi-house-check text-warning fs-2"></i>
+                            <h6 class="mt-2">Applications</h6>
+                            <p class="text-muted small">Property applications</p>
+                            <a href="{% url 'applications:my_applications' %}" class="btn btn-sm btn-outline-warning">My Applications</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-5">
+            <i class="bi bi-collection text-muted" style="font-size: 4rem;"></i>
+            <h4 class="mt-3">No Groups Yet</h4>
+            <p class="text-muted mb-4">Join or create a group to start your shared housing journey with others.</p>
+
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="text-center">
+                                        <i class="bi bi-plus-circle text-primary fs-1 mb-3"></i>
+                                        <h5>Create a Group</h5>
+                                        <p class="text-muted">Start your own roommate group and set your preferences</p>
+                                        <a href="{% url 'groups:create_group' %}" class="btn btn-primary">Create Group</a>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="text-center">
+                                        <i class="bi bi-search text-info fs-1 mb-3"></i>
+                                        <h5>Join a Group</h5>
+                                        <p class="text-muted">Browse existing groups and request to join</p>
+                                        <a href="{% url 'groups:group_list' %}" class="btn btn-outline-info">Browse Groups</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add hover effects to group cards
+    const groupCards = document.querySelectorAll('.card');
+    groupCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+            this.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+        });
+
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = '';
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,317 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Find Groups - SharedHousing{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-2">Find Roommate Groups</h1>
+            <p class="text-muted">{{ total_count }} groups looking for members</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'groups:create_group' %}" class="btn btn-primary me-2">
+                <i class="bi bi-plus-circle"></i> Create Group
+            </a>
+            <a href="{% url 'groups:my_groups' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-collection"></i> My Groups
+            </a>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="search" class="form-control"
+                           placeholder="Group name or description..." value="{{ search_query }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Location</label>
+                    <input type="text" name="location" class="form-control"
+                           placeholder="Preferred area..." value="{{ location_filter }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        <option value="forming" {% if status_filter == "forming" %}selected{% endif %}>Forming</option>
+                        <option value="active" {% if status_filter == "active" %}selected{% endif %}>Active</option>
+                        <option value="house_hunting" {% if status_filter == "house_hunting" %}selected{% endif %}>House Hunting</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Size</label>
+                    <select name="size" class="form-select">
+                        <option value="">Any Size</option>
+                        <option value="2">2 people</option>
+                        <option value="3">3 people</option>
+                        <option value="4">4+ people</option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary d-block w-100">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Groups Grid -->
+    {% if groups %}
+        <div class="row">
+            {% for group in groups %}
+                <div class="col-lg-6 col-xl-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">{{ group.name }}</h6>
+                            <div class="d-flex align-items-center">
+                                {% if group.is_private %}
+                                    <i class="bi bi-lock text-warning me-2" title="Private group"></i>
+                                {% endif %}
+                                <span class="badge
+                                    {% if group.status == 'forming' %}bg-primary
+                                    {% elif group.status == 'active' %}bg-success
+                                    {% elif group.status == 'house_hunting' %}bg-info
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ group.get_status_display }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <!-- Group Description -->
+                            {% if group.description %}
+                                <p class="text-muted small mb-3">{{ group.description|truncatechars:120 }}</p>
+                            {% else %}
+                                <p class="text-muted small mb-3 fst-italic">No description provided.</p>
+                            {% endif %}
+
+                            <!-- Group Stats -->
+                            <div class="row mb-3">
+                                <div class="col-4 text-center">
+                                    <div class="h6 mb-0">{{ group.member_count|default:group.current_member_count }}</div>
+                                    <small class="text-muted">Members</small>
+                                </div>
+                                <div class="col-4 text-center">
+                                    <div class="h6 mb-0">{{ group.available_spots }}</div>
+                                    <small class="text-muted">Spots Left</small>
+                                </div>
+                                <div class="col-4 text-center">
+                                    <div class="h6 mb-0">{{ group.max_members }}</div>
+                                    <small class="text-muted">Max Size</small>
+                                </div>
+                            </div>
+
+                            <!-- Group Details -->
+                            <div class="mb-3">
+                                {% if group.target_budget_min and group.target_budget_max %}
+                                    <p class="mb-1 small">
+                                        <i class="bi bi-currency-dollar text-success"></i>
+                                        ${{ group.target_budget_min }} - ${{ group.target_budget_max }}/week
+                                    </p>
+                                {% endif %}
+
+                                {% if group.preferred_locations %}
+                                    <p class="mb-1 small">
+                                        <i class="bi bi-geo-alt text-info"></i>
+                                        {% for location in group.preferred_locations|slice:":2" %}
+                                            {{ location }}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                        {% if group.preferred_locations|length > 2 %}
+                                            <span class="text-muted">+{{ group.preferred_locations|length|add:"-2" }} more</span>
+                                        {% endif %}
+                                    </p>
+                                {% endif %}
+
+                                {% if group.required_bedrooms %}
+                                    <p class="mb-1 small">
+                                        <i class="bi bi-door-open text-warning"></i>
+                                        {{ group.required_bedrooms }} bedroom{{ group.required_bedrooms|pluralize }}
+                                        {% if group.required_bathrooms %}, {{ group.required_bathrooms }} bathroom{{ group.required_bathrooms|pluralize }}{% endif %}
+                                    </p>
+                                {% endif %}
+
+                                {% if group.move_in_date %}
+                                    <p class="mb-1 small">
+                                        <i class="bi bi-calendar-event text-primary"></i>
+                                        {{ group.move_in_date|date:"M d, Y" }}
+                                    </p>
+                                {% endif %}
+                            </div>
+
+                            <!-- Group Features -->
+                            <div class="mb-3">
+                                <div class="d-flex flex-wrap gap-1">
+                                    {% if group.pet_friendly %}
+                                        <span class="badge bg-light text-dark">
+                                            <i class="bi bi-heart"></i> Pet Friendly
+                                        </span>
+                                    {% endif %}
+                                    {% if group.smoking_allowed %}
+                                        <span class="badge bg-light text-dark">Smoking OK</span>
+                                    {% elif group.smoking_allowed == False %}
+                                        <span class="badge bg-light text-dark">No Smoking</span>
+                                    {% endif %}
+                                    {% if group.furnished_preference and group.furnished_preference != 'no_preference' %}
+                                        <span class="badge bg-light text-dark">{{ group.get_furnished_preference_display }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Progress Bar -->
+                            <div class="mb-3">
+                                <div class="progress" style="height: 6px;">
+                                    {% with progress=group.member_count|default:group.current_member_count %}
+                                        <div class="progress-bar
+                                            {% if group.is_full %}bg-success
+                                            {% elif progress > group.min_members %}bg-info
+                                            {% else %}bg-warning{% endif %}"
+                                             style="width: {% widthratio progress group.max_members 100 %}%">
+                                        </div>
+                                    {% endwith %}
+                                </div>
+                                <small class="text-muted">
+                                    {% if group.is_full %}
+                                        Group is full
+                                    {% elif group.needs_members %}
+                                        Needs {{ group.min_members|add:"-1" }} more member{{ group.min_members|add:"-1"|pluralize }} to be active
+                                    {% else %}
+                                        Group is active and looking for members
+                                    {% endif %}
+                                </small>
+                            </div>
+
+                            <!-- Created Date -->
+                            <small class="text-muted">
+                                Created {{ group.created_at|timesince }} ago
+                            </small>
+                        </div>
+
+                        <div class="card-footer bg-transparent">
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'groups:group_detail' group.id %}"
+                                   class="btn btn-primary flex-fill">
+                                    View Details
+                                </a>
+                                {% if not group.is_full %}
+                                    {% if group.is_private %}
+                                        <button class="btn btn-outline-warning"
+                                                title="Private group - invitation required">
+                                            <i class="bi bi-lock"></i>
+                                        </button>
+                                    {% else %}
+                                        <a href="{% url 'groups:join_group_request' group.id %}"
+                                           class="btn btn-success">
+                                            Join
+                                        </a>
+                                    {% endif %}
+                                {% else %}
+                                    <button class="btn btn-secondary" disabled>
+                                        Full
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if groups.has_other_pages %}
+            <nav aria-label="Groups pagination">
+                <ul class="pagination justify-content-center">
+                    {% if groups.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ groups.previous_page_number }}">Previous</a>
+                        </li>
+                    {% endif %}
+
+                    {% for num in groups.paginator.page_range %}
+                        {% if groups.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > groups.number|add:'-3' and num < groups.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if groups.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ groups.next_page_number }}">Next</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-5">
+            <i class="bi bi-collection text-muted" style="font-size: 4rem;"></i>
+            <h4 class="mt-3">No Groups Found</h4>
+            <p class="text-muted">No groups match your current search criteria.</p>
+            <div class="d-flex gap-2 justify-content-center">
+                <a href="{% url 'groups:group_list' %}" class="btn btn-primary">Reset Search</a>
+                <a href="{% url 'groups:create_group' %}" class="btn btn-outline-primary">Create Group</a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add smooth hover effects
+    const cards = document.querySelectorAll('.card');
+    cards.forEach(card => {
+        card.style.transition = 'transform 0.2s, box-shadow 0.2s';
+
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-4px)';
+            this.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+        });
+
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = '';
+        });
+    });
+
+    // Handle join group clicks
+    document.querySelectorAll('a[href*="join_group_request"]').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            // Show confirmation modal
+            if (confirm('Request to join this group? The group admins will review your request.')) {
+                // Create a form and submit it as POST
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = this.href;
+
+                // Add CSRF token
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrfmiddlewaretoken';
+                csrfInput.value = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+                form.appendChild(csrfInput);
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

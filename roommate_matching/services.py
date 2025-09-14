@@ -113,9 +113,9 @@ class CompatibilityCalculator:
         if not all([profile1.min_budget, profile1.max_budget, profile2.min_budget, profile2.max_budget]):
             return 50.0  # Neutral score for missing data
 
-        # Calculate budget range overlap
-        user1_range = (profile1.min_budget, profile1.max_budget)
-        user2_range = (profile2.min_budget, profile2.max_budget)
+        # Calculate budget range overlap (convert Decimal to float)
+        user1_range = (float(profile1.min_budget), float(profile1.max_budget))
+        user2_range = (float(profile2.min_budget), float(profile2.max_budget))
 
         # Find overlap
         overlap_start = max(user1_range[0], user2_range[0])
@@ -347,22 +347,42 @@ class MatchingService:
                 # Calculate compatibility
                 result = self.calculator.calculate_compatibility(user1, user2)
 
-                # Create or update compatibility score
-                compatibility_score, created = CompatibilityScore.objects.update_or_create(
-                    user1=user1,
-                    user2=user2,
-                    defaults={
-                        'overall_score': result['overall_score'],
-                        'budget_score': result['budget_score'],
-                        'location_score': result['location_score'],
-                        'lifestyle_score': result['lifestyle_score'],
-                        'schedule_score': result['schedule_score'],
-                        'habits_score': result['habits_score'],
-                        'score_breakdown': result['breakdown'],
-                        'calculated_at': timezone.now(),
-                        'is_active': True
-                    }
-                )
+                # Check if calculation had errors
+                if 'error' in result:
+                    logger.warning(f"Compatibility calculation failed for users {user1.id} and {user2.id}: {result['error']}")
+                    # Create a minimal compatibility score for error cases
+                    compatibility_score, created = CompatibilityScore.objects.update_or_create(
+                        user1=user1,
+                        user2=user2,
+                        defaults={
+                            'overall_score': result.get('overall_score', 0),
+                            'budget_score': 0,
+                            'location_score': 0,
+                            'lifestyle_score': 0,
+                            'schedule_score': 0,
+                            'habits_score': 0,
+                            'score_breakdown': {'error': result['error']},
+                            'calculated_at': timezone.now(),
+                            'is_active': False
+                        }
+                    )
+                else:
+                    # Create or update compatibility score with full results
+                    compatibility_score, created = CompatibilityScore.objects.update_or_create(
+                        user1=user1,
+                        user2=user2,
+                        defaults={
+                            'overall_score': result['overall_score'],
+                            'budget_score': result['budget_score'],
+                            'location_score': result['location_score'],
+                            'lifestyle_score': result['lifestyle_score'],
+                            'schedule_score': result['schedule_score'],
+                            'habits_score': result['habits_score'],
+                            'score_breakdown': result['breakdown'],
+                            'calculated_at': timezone.now(),
+                            'is_active': True
+                        }
+                    )
 
                 # Log activity
                 MatchingActivity.objects.create(
@@ -598,18 +618,23 @@ class MatchingService:
 
         return interaction
 
-    def get_user_recommendations(self, user: User, refresh: bool = False) -> List[UserRecommendation]:
+    def get_user_recommendations(self, user: User, refresh: bool = False, limit: int = None) -> List[UserRecommendation]:
         """Get recommendations for a user"""
 
         # Check if we need to refresh recommendations
         if refresh or not UserRecommendation.objects.filter(target_user=user, is_dismissed=False).exists():
-            return self.generate_recommendations(user)
+            return self.generate_recommendations(user, limit=limit or 10)
 
         # Return existing recommendations
-        return UserRecommendation.objects.filter(
+        queryset = UserRecommendation.objects.filter(
             target_user=user,
             is_dismissed=False
         ).select_related(
             'recommended_user__profile',
             'compatibility_score'
         ).order_by('-compatibility_score__overall_score')
+
+        if limit:
+            queryset = queryset[:limit]
+
+        return list(queryset)

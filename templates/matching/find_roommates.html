@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Find Roommates - SharedHousing{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-2">Find Your Perfect Roommate</h1>
+            <p class="text-muted">{{ total_count }} potential roommates found based on your preferences</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'matching:my_matches' %}" class="btn btn-outline-primary me-2">
+                <i class="bi bi-heart"></i> My Matches
+            </a>
+            <a href="{% url 'matching:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="search" class="form-control" placeholder="Name or email..." value="{{ search_query }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Location</label>
+                    <input type="text" name="location" class="form-control" placeholder="Preferred area..." value="{{ location }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Min Budget</label>
+                    <input type="number" name="min_budget" class="form-control" placeholder="$ per week" value="{{ min_budget }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Max Budget</label>
+                    <input type="number" name="max_budget" class="form-control" placeholder="$ per week" value="{{ max_budget }}">
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary d-block w-100">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Sort By</label>
+                    <select name="sort" class="form-select">
+                        <option value="compatibility" {% if request.GET.sort == "compatibility" %}selected{% endif %}>Compatibility Score</option>
+                        <option value="-created_at" {% if request.GET.sort == "-created_at" %}selected{% endif %}>Recently Joined</option>
+                        <option value="location" {% if request.GET.sort == "location" %}selected{% endif %}>Location Match</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Roommate Cards -->
+    {% if page_obj %}
+        <div class="row">
+            {% for user_data in page_obj %}
+                {% with user=user_data.user compatibility_score=user_data.compatibility_score %}
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <!-- User Profile Header -->
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3"
+                                         style="width: 60px; height: 60px;">
+                                        <i class="bi bi-person text-white fs-4"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h5 class="mb-1">{{ user.get_short_name }}</h5>
+                                        {% if compatibility_score %}
+                                            <div class="d-flex align-items-center">
+                                                <div class="progress me-2" style="height: 8px; width: 80px;">
+                                                    <div class="progress-bar
+                                                        {% if compatibility_score.overall_score >= 80 %}bg-success
+                                                        {% elif compatibility_score.overall_score >= 60 %}bg-warning
+                                                        {% else %}bg-danger{% endif %}"
+                                                         style="width: {{ compatibility_score.overall_score }}%"></div>
+                                                </div>
+                                                <span class="fw-bold
+                                                    {% if compatibility_score.overall_score >= 80 %}text-success
+                                                    {% elif compatibility_score.overall_score >= 60 %}text-warning
+                                                    {% else %}text-danger{% endif %}">
+                                                    {{ compatibility_score.overall_score }}%
+                                                </span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- User Details -->
+                                {% if user.profile %}
+                                    <div class="mb-3">
+                                        {% if user.profile.current_location %}
+                                            <p class="text-muted small mb-1">
+                                                <i class="bi bi-geo-alt"></i> {{ user.profile.current_location }}
+                                            </p>
+                                        {% endif %}
+                                        {% if user.profile.budget_min and user.profile.budget_max %}
+                                            <p class="text-muted small mb-1">
+                                                <i class="bi bi-currency-dollar"></i> ${{ user.profile.budget_min }} - ${{ user.profile.budget_max }}/week
+                                            </p>
+                                        {% endif %}
+                                        {% if user.profile.occupation %}
+                                            <p class="text-muted small mb-1">
+                                                <i class="bi bi-briefcase"></i> {{ user.profile.occupation }}
+                                            </p>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Compatibility Highlights -->
+                                    {% if compatibility_score %}
+                                        <div class="mb-3">
+                                            <h6 class="small text-muted mb-2">COMPATIBILITY HIGHLIGHTS</h6>
+                                            <div class="d-flex flex-wrap gap-1">
+                                                {% if compatibility_score.lifestyle_score >= 70 %}
+                                                    <span class="badge bg-success">Lifestyle Match</span>
+                                                {% endif %}
+                                                {% if compatibility_score.budget_score >= 70 %}
+                                                    <span class="badge bg-success">Budget Match</span>
+                                                {% endif %}
+                                                {% if compatibility_score.location_score >= 70 %}
+                                                    <span class="badge bg-success">Location Match</span>
+                                                {% endif %}
+                                                {% if compatibility_score.personality_score >= 70 %}
+                                                    <span class="badge bg-success">Personality Match</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endif %}
+
+                                    <!-- Interests/Lifestyle -->
+                                    {% if user.profile.interests %}
+                                        <div class="mb-3">
+                                            <h6 class="small text-muted mb-2">INTERESTS</h6>
+                                            <div class="d-flex flex-wrap gap-1">
+                                                {% for interest in user.profile.interests|slice:":5" %}
+                                                    <span class="badge bg-light text-dark">{{ interest }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+
+                                <!-- Actions -->
+                                <div class="d-flex gap-2 mt-auto">
+                                    <a href="{% url 'matching:connect' user.id %}" class="btn btn-primary flex-fill">
+                                        <i class="bi bi-chat-dots"></i> Connect
+                                    </a>
+                                    <a href="{% url 'matching:compatibility_detail' user.id %}" class="btn btn-outline-secondary">
+                                        <i class="bi bi-bar-chart"></i> Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endwith %}
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+            <nav aria-label="Roommate pagination">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">Previous</a>
+                        </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">Next</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-people text-muted" style="font-size: 4rem;"></i>
+            <h4 class="mt-3">No Roommates Found</h4>
+            <p class="text-muted">Try adjusting your search criteria or check back later for new members.</p>
+            <div class="d-flex gap-2 justify-content-center">
+                <a href="{% url 'matching:find_roommates' %}" class="btn btn-primary">Reset Search</a>
+                <a href="{% url 'groups:group_list' %}" class="btn btn-outline-primary">Browse Groups</a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle connect button clicks
+    document.querySelectorAll('a[href*="connect"]').forEach(function(button) {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            // Show confirmation modal or proceed directly
+            if (confirm('Start a conversation with this potential roommate?')) {
+                window.location.href = this.href;
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

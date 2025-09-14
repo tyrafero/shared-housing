@@ -23,7 +23,7 @@ urlpatterns = [
     path('properties/', include('properties.urls')),
 
     # Matching system
-    path('matching/', include('matching.urls')),
+    path('matching/', include('roommate_matching.urls')),
 
     # Messaging
     path('messages/', include('messaging.urls')),

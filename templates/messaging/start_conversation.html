@@ -1,0 +1,339 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Start New Conversation - SharedHousing{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="d-flex align-items-center mb-3">
+                <a href="{% url 'messaging:conversations_list' %}" class="btn btn-outline-secondary me-3">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
+                <div>
+                    <h1 class="h3 mb-1">Start New Conversation</h1>
+                    <p class="text-muted mb-0">Connect with other users on the platform</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Conversation Form -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">New Conversation</h5>
+                </div>
+                <div class="card-body">
+                    {% if preselected_user %}
+                        <!-- Preselected User -->
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Starting conversation with <strong>{{ preselected_user.get_short_name }}</strong>
+                        </div>
+
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-auto">
+                                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center"
+                                             style="width: 60px; height: 60px;">
+                                            <i class="bi bi-person text-white" style="font-size: 1.5rem;"></i>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <h6 class="mb-1">{{ preselected_user.get_full_name }}</h6>
+                                        {% if preselected_user.profile.bio %}
+                                            <p class="text-muted mb-1 small">{{ preselected_user.profile.bio|truncatechars:100 }}</p>
+                                        {% endif %}
+                                        <div class="small text-muted">
+                                            {% if preselected_user.profile.occupation %}
+                                                <span class="me-3"><i class="bi bi-briefcase me-1"></i>{{ preselected_user.profile.occupation }}</span>
+                                            {% endif %}
+                                            {% if preselected_user.profile.age %}
+                                                <span><i class="bi bi-person me-1"></i>{{ preselected_user.profile.age }} years old</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+
+                        {% if not preselected_user %}
+                            <!-- User Selection -->
+                            <div class="mb-4">
+                                <label for="participant_search" class="form-label">Find User to Message</label>
+                                <div class="position-relative">
+                                    <input type="text" class="form-control" id="participant_search"
+                                           placeholder="Search by name or email...">
+                                    <div id="search_results" class="position-absolute w-100 bg-white border rounded-bottom shadow-sm d-none" style="top: 100%; z-index: 1000;">
+                                        <!-- Search results will be populated here -->
+                                    </div>
+                                </div>
+                                <div class="form-text">Start typing to search for users to message</div>
+
+                                <!-- Selected participants -->
+                                <div id="selected_participants" class="mt-2">
+                                    <!-- Selected users will appear here -->
+                                </div>
+
+                                <!-- Hidden input for selected user IDs -->
+                                <input type="hidden" id="participant_ids" name="participant_ids" required>
+                                <div class="invalid-feedback">
+                                    Please select at least one person to message.
+                                </div>
+                            </div>
+                        {% else %}
+                            <input type="hidden" name="participant_ids" value="{{ preselected_user.id }}">
+                        {% endif %}
+
+                        <!-- Conversation Type -->
+                        <div class="mb-4">
+                            <label for="conversation_type" class="form-label">Conversation Type</label>
+                            <select class="form-select" id="conversation_type" name="conversation_type">
+                                <option value="direct">Direct Message</option>
+                                <option value="roommate_matching" {% if preselected_user %}selected{% endif %}>Roommate Discussion</option>
+                                <option value="property_inquiry">Property Inquiry</option>
+                                <option value="group">Group Chat</option>
+                            </select>
+                            <div class="form-text">Choose the type of conversation you want to start</div>
+                        </div>
+
+                        <!-- Subject/Title -->
+                        <div class="mb-4">
+                            <label for="title" class="form-label">Subject (Optional)</label>
+                            <input type="text" class="form-control" id="title" name="title"
+                                   placeholder="e.g., Looking for roommate in Surry Hills">
+                            <div class="form-text">Add a subject line to help organize your conversation</div>
+                        </div>
+
+                        <!-- Initial Message -->
+                        <div class="mb-4">
+                            <label for="initial_message" class="form-label">Your Message</label>
+                            <textarea class="form-control" id="initial_message" name="initial_message" rows="4"
+                                      placeholder="Hi! I saw your profile and think we might be compatible roommates. Would you like to chat about shared housing options?"
+                                      required></textarea>
+                            <div class="invalid-feedback">
+                                Please enter a message to start the conversation.
+                            </div>
+                            <div class="form-text">Write a friendly introduction message</div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send me-2"></i>Start Conversation
+                            </button>
+                            <a href="{% url 'messaging:conversations_list' %}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'matching:find_roommates' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-people me-2"></i>Find Roommates
+                        </a>
+                        <a href="{% url 'properties:list' %}" class="btn btn-outline-success">
+                            <i class="bi bi-house me-2"></i>Browse Properties
+                        </a>
+                        <a href="{% url 'groups:group_list' %}" class="btn btn-outline-info">
+                            <i class="bi bi-collection me-2"></i>Find Groups
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tips -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Conversation Tips</h6>
+                </div>
+                <div class="card-body">
+                    <div class="small">
+                        <div class="mb-3">
+                            <h6 class="small">👋 Be Friendly</h6>
+                            <p class="mb-0 text-muted">Start with a warm greeting and mention something from their profile.</p>
+                        </div>
+                        <div class="mb-3">
+                            <h6 class="small">🎯 Be Specific</h6>
+                            <p class="mb-0 text-muted">Mention what you're looking for - area, budget, move-in date.</p>
+                        </div>
+                        <div class="mb-3">
+                            <h6 class="small">❓ Ask Questions</h6>
+                            <p class="mb-0 text-muted">Show interest by asking about their housing preferences.</p>
+                        </div>
+                        <div class="mb-0">
+                            <h6 class="small">🤝 Stay Respectful</h6>
+                            <p class="mb-0 text-muted">Keep conversations professional and respectful at all times.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const searchInput = document.getElementById('participant_search');
+    const searchResults = document.getElementById('search_results');
+    const selectedParticipants = document.getElementById('selected_participants');
+    const participantIds = document.getElementById('participant_ids');
+    let selectedUsers = [];
+
+    // Enable Bootstrap validation
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+    }, false);
+
+    // Only setup search if not preselecting user
+    if (searchInput) {
+        let searchTimeout;
+
+        searchInput.addEventListener('input', function() {
+            const query = this.value.trim();
+
+            clearTimeout(searchTimeout);
+
+            if (query.length < 2) {
+                searchResults.classList.add('d-none');
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                searchUsers(query);
+            }, 300);
+        });
+
+        // Hide search results when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!searchInput.contains(event.target) && !searchResults.contains(event.target)) {
+                searchResults.classList.add('d-none');
+            }
+        });
+    }
+
+    function searchUsers(query) {
+        fetch(`{% url 'messaging:user_search' %}?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                displaySearchResults(data.users || []);
+            })
+            .catch(error => {
+                console.error('Search error:', error);
+                searchResults.innerHTML = '<div class="p-3 text-muted">Search failed. Please try again.</div>';
+                searchResults.classList.remove('d-none');
+            });
+    }
+
+    function displaySearchResults(users) {
+        if (users.length === 0) {
+            searchResults.innerHTML = '<div class="p-3 text-muted">No users found.</div>';
+        } else {
+            const resultsHtml = users.map(user => `
+                <div class="search-result p-2 border-bottom" style="cursor: pointer;" data-user-id="${user.id}">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2"
+                             style="width: 30px; height: 30px;">
+                            <i class="bi bi-person text-white" style="font-size: 0.8rem;"></i>
+                        </div>
+                        <div>
+                            <div class="fw-medium">${user.name}</div>
+                            <div class="small text-muted">${user.email}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            searchResults.innerHTML = resultsHtml;
+
+            // Add click handlers
+            searchResults.querySelectorAll('.search-result').forEach(result => {
+                result.addEventListener('click', function() {
+                    const userId = parseInt(this.dataset.userId);
+                    const userName = this.querySelector('.fw-medium').textContent;
+                    selectUser(userId, userName);
+                });
+            });
+        }
+
+        searchResults.classList.remove('d-none');
+    }
+
+    function selectUser(userId, userName) {
+        // For direct messages, only allow one participant
+        selectedUsers = [{id: userId, name: userName}];
+        updateSelectedParticipants();
+        searchInput.value = '';
+        searchResults.classList.add('d-none');
+    }
+
+    function updateSelectedParticipants() {
+        if (selectedUsers.length === 0) {
+            selectedParticipants.innerHTML = '';
+            participantIds.value = '';
+            return;
+        }
+
+        const participantsHtml = selectedUsers.map(user => `
+            <span class="badge bg-primary me-2 mb-2" style="font-size: 0.9rem;">
+                ${user.name}
+                <button type="button" class="btn-close btn-close-white ms-2" style="font-size: 0.7rem;"
+                        onclick="removeUser(${user.id})"></button>
+            </span>
+        `).join('');
+
+        selectedParticipants.innerHTML = participantsHtml;
+        participantIds.value = selectedUsers.map(user => user.id).join(',');
+    }
+
+    window.removeUser = function(userId) {
+        selectedUsers = selectedUsers.filter(user => user.id !== userId);
+        updateSelectedParticipants();
+    };
+
+    // Auto-populate message based on conversation type
+    const conversationType = document.getElementById('conversation_type');
+    const initialMessage = document.getElementById('initial_message');
+
+    conversationType.addEventListener('change', function() {
+        const messageTemplates = {
+            'direct': "Hi! I'd like to connect with you.",
+            'roommate_matching': "Hi! I saw your profile and think we might be compatible roommates. Would you like to chat about shared housing options?",
+            'property_inquiry': "Hi! I'm interested in learning more about properties you might know about.",
+            'group': "Hi! I'd like to start a group conversation about shared housing."
+        };
+
+        if (initialMessage.value === '' || Object.values(messageTemplates).includes(initialMessage.value)) {
+            initialMessage.value = messageTemplates[this.value] || messageTemplates['direct'];
+        }
+    });
+});
+</script>
+{% endblock %}

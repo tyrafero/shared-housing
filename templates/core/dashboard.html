@@ -175,19 +175,19 @@
                         </a>
                         {% endif %}
 
-                        <a href="#" class="btn btn-outline-primary">
+                        <a href="{% url 'matching:find_roommates' %}" class="btn btn-outline-primary">
                             <i class="bi bi-search me-2"></i>Find Roommates
                         </a>
 
-                        <a href="#" class="btn btn-outline-success">
+                        <a href="{% url 'properties:list' %}" class="btn btn-outline-success">
                             <i class="bi bi-house-door me-2"></i>Browse Properties
                         </a>
 
-                        <a href="#" class="btn btn-outline-info">
+                        <a href="{% url 'messaging:conversations_list' %}" class="btn btn-outline-info">
                             <i class="bi bi-chat-dots me-2"></i>Messages
                         </a>
 
-                        <a href="#" class="btn btn-outline-warning">
+                        <a href="{% url 'groups:my_groups' %}" class="btn btn-outline-warning">
                             <i class="bi bi-people me-2"></i>My Groups
                         </a>
                     </div>

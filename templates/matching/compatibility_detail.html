@@ -1,0 +1,360 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Compatibility with {{ other_user.get_short_name }} - SharedHousing{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="d-flex align-items-center mb-3">
+                <a href="{% url 'matching:find_roommates' %}" class="btn btn-outline-secondary me-3">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
+                <div>
+                    <h1 class="h3 mb-1">Compatibility with {{ other_user.get_short_name }}</h1>
+                    <p class="text-muted mb-0">Detailed compatibility breakdown</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'messaging:start_conversation' %}?user={{ other_user.id }}" class="btn btn-primary me-2">
+                <i class="bi bi-chat-dots"></i> Start Chat
+            </a>
+            <a href="{% url 'matching:connect' other_user.id %}" class="btn btn-success">
+                <i class="bi bi-person-plus"></i> Connect
+            </a>
+        </div>
+    </div>
+
+    <!-- Overall Score -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card bg-{% if compatibility_score.overall_score >= 80 %}success{% elif compatibility_score.overall_score >= 60 %}warning{% else %}danger{% endif %} text-white">
+                <div class="card-body text-center">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <div class="display-1 fw-bold mb-0">{{ compatibility_score.overall_score|floatformat:0 }}%</div>
+                        </div>
+                        <div class="col-md-9">
+                            <h4 class="mb-2">{{ compatibility_score.compatibility_level }} Compatibility</h4>
+                            <p class="mb-0 fs-5">
+                                {% if compatibility_score.overall_score >= 90 %}
+                                    This is an excellent match! You have highly compatible preferences and lifestyles.
+                                {% elif compatibility_score.overall_score >= 80 %}
+                                    This looks like a great potential roommate with strong compatibility.
+                                {% elif compatibility_score.overall_score >= 70 %}
+                                    Good compatibility with several matching preferences.
+                                {% elif compatibility_score.overall_score >= 60 %}
+                                    Fair compatibility - you have some things in common.
+                                {% else %}
+                                    Limited compatibility - consider if this works for both of you.
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Compatibility Breakdown -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-bar-chart-line me-2"></i>Compatibility Breakdown</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Budget Compatibility -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">
+                                <i class="bi bi-currency-dollar text-success me-2"></i>Budget Compatibility
+                            </h6>
+                            <span class="fw-bold">{{ compatibility_score.budget_score|floatformat:0 }}%</span>
+                        </div>
+                        <div class="progress mb-2" style="height: 8px;">
+                            <div class="progress-bar {% if compatibility_score.budget_score >= 70 %}bg-success{% elif compatibility_score.budget_score >= 40 %}bg-warning{% else %}bg-danger{% endif %}"
+                                 style="width: {{ compatibility_score.budget_score }}%"></div>
+                        </div>
+                        <small class="text-muted">
+                            {% if compatibility_score.budget_score >= 80 %}
+                                Your budget ranges overlap very well
+                            {% elif compatibility_score.budget_score >= 60 %}
+                                Good budget alignment with some overlap
+                            {% elif compatibility_score.budget_score >= 40 %}
+                                Some budget compatibility, worth discussing
+                            {% else %}
+                                Limited budget overlap - may need compromise
+                            {% endif %}
+                        </small>
+                    </div>
+
+                    <!-- Location Compatibility -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">
+                                <i class="bi bi-geo-alt text-info me-2"></i>Location Preferences
+                            </h6>
+                            <span class="fw-bold">{{ compatibility_score.location_score|floatformat:0 }}%</span>
+                        </div>
+                        <div class="progress mb-2" style="height: 8px;">
+                            <div class="progress-bar {% if compatibility_score.location_score >= 70 %}bg-success{% elif compatibility_score.location_score >= 40 %}bg-warning{% else %}bg-danger{% endif %}"
+                                 style="width: {{ compatibility_score.location_score }}%"></div>
+                        </div>
+                        <small class="text-muted">
+                            {% if compatibility_score.location_score >= 80 %}
+                                You both prefer similar locations
+                            {% elif compatibility_score.location_score >= 60 %}
+                                Some common preferred areas
+                            {% elif compatibility_score.location_score >= 40 %}
+                                Limited location overlap
+                            {% else %}
+                                Different location preferences
+                            {% endif %}
+                        </small>
+                    </div>
+
+                    <!-- Lifestyle Compatibility -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">
+                                <i class="bi bi-heart text-danger me-2"></i>Lifestyle Match
+                            </h6>
+                            <span class="fw-bold">{{ compatibility_score.lifestyle_score|floatformat:0 }}%</span>
+                        </div>
+                        <div class="progress mb-2" style="height: 8px;">
+                            <div class="progress-bar {% if compatibility_score.lifestyle_score >= 70 %}bg-success{% elif compatibility_score.lifestyle_score >= 40 %}bg-warning{% else %}bg-danger{% endif %}"
+                                 style="width: {{ compatibility_score.lifestyle_score }}%"></div>
+                        </div>
+                        <small class="text-muted">
+                            {% if compatibility_score.lifestyle_score >= 80 %}
+                                Very compatible lifestyles and social preferences
+                            {% elif compatibility_score.lifestyle_score >= 60 %}
+                                Good lifestyle compatibility
+                            {% elif compatibility_score.lifestyle_score >= 40 %}
+                                Some lifestyle differences to consider
+                            {% else %}
+                                Significant lifestyle differences
+                            {% endif %}
+                        </small>
+                    </div>
+
+                    <!-- Schedule Compatibility -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">
+                                <i class="bi bi-clock text-primary me-2"></i>Schedule Alignment
+                            </h6>
+                            <span class="fw-bold">{{ compatibility_score.schedule_score|floatformat:0 }}%</span>
+                        </div>
+                        <div class="progress mb-2" style="height: 8px;">
+                            <div class="progress-bar {% if compatibility_score.schedule_score >= 70 %}bg-success{% elif compatibility_score.schedule_score >= 40 %}bg-warning{% else %}bg-danger{% endif %}"
+                                 style="width: {{ compatibility_score.schedule_score }}%"></div>
+                        </div>
+                        <small class="text-muted">
+                            {% if compatibility_score.schedule_score >= 80 %}
+                                Your schedules align very well
+                            {% elif compatibility_score.schedule_score >= 60 %}
+                                Compatible schedules with minor differences
+                            {% elif compatibility_score.schedule_score >= 40 %}
+                                Some schedule differences
+                            {% else %}
+                                Very different schedules - early bird vs night owl?
+                            {% endif %}
+                        </small>
+                    </div>
+
+                    <!-- Habits Compatibility -->
+                    <div class="mb-0">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">
+                                <i class="bi bi-house text-warning me-2"></i>Living Habits
+                            </h6>
+                            <span class="fw-bold">{{ compatibility_score.habits_score|floatformat:0 }}%</span>
+                        </div>
+                        <div class="progress mb-2" style="height: 8px;">
+                            <div class="progress-bar {% if compatibility_score.habits_score >= 70 %}bg-success{% elif compatibility_score.habits_score >= 40 %}bg-warning{% else %}bg-danger{% endif %}"
+                                 style="width: {{ compatibility_score.habits_score }}%"></div>
+                        </div>
+                        <small class="text-muted">
+                            {% if compatibility_score.habits_score >= 80 %}
+                                Very similar cleanliness and noise preferences
+                            {% elif compatibility_score.habits_score >= 60 %}
+                                Compatible living habits
+                            {% elif compatibility_score.habits_score >= 40 %}
+                                Some differences in cleanliness/noise tolerance
+                            {% else %}
+                                Significant differences in living standards
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Summary -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">{{ other_user.get_short_name }}'s Profile</h6>
+                </div>
+                <div class="card-body">
+                    <!-- Profile Photo Placeholder -->
+                    <div class="text-center mb-3">
+                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center mx-auto"
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-person text-white" style="font-size: 2rem;"></i>
+                        </div>
+                        <h5 class="mt-2 mb-0">{{ other_user.get_full_name }}</h5>
+                        {% if other_user.profile.age %}
+                            <small class="text-muted">{{ other_user.profile.age }} years old</small>
+                        {% endif %}
+                    </div>
+
+                    <!-- Key Details -->
+                    {% if other_user.profile.min_budget and other_user.profile.max_budget %}
+                        <div class="mb-2">
+                            <strong>Budget:</strong> ${{ other_user.profile.min_budget }} - ${{ other_user.profile.max_budget }}/week
+                        </div>
+                    {% endif %}
+
+                    {% if other_user.profile.preferred_locations %}
+                        <div class="mb-2">
+                            <strong>Preferred Areas:</strong>
+                            {% for location in other_user.profile.preferred_locations %}
+                                <span class="badge bg-light text-dark">{{ location }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    {% if other_user.profile.occupation %}
+                        <div class="mb-2">
+                            <strong>Occupation:</strong> {{ other_user.profile.occupation }}
+                        </div>
+                    {% endif %}
+
+                    {% if other_user.profile.bio %}
+                        <div class="mb-3">
+                            <strong>About:</strong>
+                            <p class="small mt-1 mb-0">{{ other_user.profile.bio|truncatechars:150 }}</p>
+                        </div>
+                    {% endif %}
+
+                    <!-- Lifestyle Tags -->
+                    <div class="mb-3">
+                        <h6 class="small text-muted mb-2">LIFESTYLE</h6>
+                        <div class="d-flex flex-wrap gap-1">
+                            {% if other_user.profile.smoker %}
+                                <span class="badge bg-{% if other_user.profile.smoker == 'yes' %}warning{% else %}success{% endif %}">
+                                    {% if other_user.profile.smoker == 'yes' %}Smoker{% else %}Non-smoker{% endif %}
+                                </span>
+                            {% endif %}
+
+                            {% if other_user.profile.pets %}
+                                <span class="badge bg-{% if other_user.profile.pets == 'yes' %}info{% else %}secondary{% endif %}">
+                                    {% if other_user.profile.pets == 'yes' %}Pet Owner{% else %}No Pets{% endif %}
+                                </span>
+                            {% endif %}
+
+                            {% if other_user.profile.schedule_type %}
+                                <span class="badge bg-primary">{{ other_user.profile.get_schedule_type_display }}</span>
+                            {% endif %}
+
+                            {% if other_user.profile.social_level %}
+                                <span class="badge bg-info">Social Level: {{ other_user.profile.social_level }}/10</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-transparent">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'messaging:start_conversation' %}?user={{ other_user.id }}" class="btn btn-primary">
+                            <i class="bi bi-chat-dots"></i> Start Conversation
+                        </a>
+                        <a href="{% url 'profiles:profile_view_other' other_user.id %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-person"></i> View Full Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Tips -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">Next Steps</h6>
+                </div>
+                <div class="card-body">
+                    <div class="small">
+                        {% if compatibility_score.overall_score >= 80 %}
+                            <div class="mb-3">
+                                <h6 class="small text-success">🎉 Excellent Match!</h6>
+                                <p class="mb-0">This is a great compatibility score. Consider reaching out to start a conversation.</p>
+                            </div>
+                        {% elif compatibility_score.overall_score >= 60 %}
+                            <div class="mb-3">
+                                <h6 class="small text-warning">👍 Good Potential</h6>
+                                <p class="mb-0">You have good compatibility. Chat to see if your personalities mesh well.</p>
+                            </div>
+                        {% else %}
+                            <div class="mb-3">
+                                <h6 class="small text-muted">🤔 Consider Carefully</h6>
+                                <p class="mb-0">Lower compatibility score. Make sure you're both comfortable with the differences.</p>
+                            </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <h6 class="small">💬 Start a Chat</h6>
+                            <p class="mb-0">Break the ice with a message about shared interests or preferences.</p>
+                        </div>
+
+                        <div class="mb-0">
+                            <h6 class="small">🏠 Discuss Logistics</h6>
+                            <p class="mb-0">Talk about move-in dates, lease terms, and household rules early.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Details -->
+    {% if compatibility_score.score_breakdown %}
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">Technical Details</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="small text-muted">
+                            <p class="mb-1">Compatibility calculated on {{ compatibility_score.calculated_at|date:"M d, Y \a\t g:i A" }}</p>
+                            <p class="mb-0">Scores are updated when profiles change to ensure accuracy.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate progress bars
+    const progressBars = document.querySelectorAll('.progress-bar');
+    progressBars.forEach(bar => {
+        const width = bar.style.width;
+        bar.style.width = '0%';
+        setTimeout(() => {
+            bar.style.transition = 'width 1.5s ease-out';
+            bar.style.width = width;
+        }, 200);
+    });
+});
+</script>
+{% endblock %}

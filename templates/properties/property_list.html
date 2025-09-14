@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Properties - SharedHousing{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-2">Find Your Perfect Property</h1>
+            <p class="text-muted">{{ total_count }} properties available</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'properties:map' %}" class="btn btn-outline-primary me-2">
+                <i class="bi bi-map"></i> Map View
+            </a>
+            <a href="{% url 'properties:saved' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-bookmark"></i> Saved
+            </a>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="search" class="form-control" placeholder="Property title, address, suburb..." value="{{ search_query }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Location</label>
+                    <input type="text" name="location" class="form-control" placeholder="Suburb, city..." value="{{ location }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Min Price</label>
+                    <input type="number" name="min_price" class="form-control" placeholder="$ per week" value="{{ min_price }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Max Price</label>
+                    <input type="number" name="max_price" class="form-control" placeholder="$ per week" value="{{ max_price }}">
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary d-block w-100">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+
+                <!-- Advanced Filters Row -->
+                <div class="col-md-2">
+                    <label class="form-label">Property Type</label>
+                    <select name="property_type" class="form-select">
+                        <option value="">Any Type</option>
+                        {% for value, display in property_types %}
+                            <option value="{{ value }}" {% if property_type == value %}selected{% endif %}>{{ display }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Bedrooms</label>
+                    <select name="bedrooms" class="form-select">
+                        <option value="">Any</option>
+                        {% for i in "123456"|make_list %}
+                            <option value="{{ i }}" {% if bedrooms == i %}selected{% endif %}>{{ i }}+</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Bathrooms</label>
+                    <select name="bathrooms" class="form-select">
+                        <option value="">Any</option>
+                        {% for i in "123"|make_list %}
+                            <option value="{{ i }}" {% if bathrooms == i %}selected{% endif %}>{{ i }}+</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Features</label>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="features" value="pet_friendly" id="pet_friendly"
+                                   {% if 'pet_friendly' in features %}checked{% endif %}>
+                            <label class="form-check-label small" for="pet_friendly">Pet Friendly</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="features" value="furnished" id="furnished"
+                                   {% if 'furnished' in features %}checked{% endif %}>
+                            <label class="form-check-label small" for="furnished">Furnished</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="features" value="parking_available" id="parking"
+                                   {% if 'parking_available' in features %}checked{% endif %}>
+                            <label class="form-check-label small" for="parking">Parking</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Sort By</label>
+                    <select name="sort" class="form-select">
+                        <option value="-created_at" {% if sort_by == "-created_at" %}selected{% endif %}>Newest First</option>
+                        <option value="weekly_rent" {% if sort_by == "weekly_rent" %}selected{% endif %}>Price: Low to High</option>
+                        <option value="-weekly_rent" {% if sort_by == "-weekly_rent" %}selected{% endif %}>Price: High to Low</option>
+                        <option value="-bedrooms" {% if sort_by == "-bedrooms" %}selected{% endif %}>Most Bedrooms</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Properties Grid -->
+    {% if page_obj %}
+        <div class="row">
+            {% for property in page_obj %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 property-card">
+                        {% if property.featured_image %}
+                            <img src="{{ property.featured_image.url }}" class="card-img-top" alt="{{ property.title }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <i class="bi bi-house text-muted fs-1"></i>
+                            </div>
+                        {% endif %}
+
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ property.title }}</h5>
+                            <p class="text-muted small mb-2">
+                                <i class="bi bi-geo-alt"></i> {{ property.address }}, {{ property.suburb }}, {{ property.state }}
+                            </p>
+
+                            <div class="row text-center mb-3">
+                                <div class="col">
+                                    <strong>{{ property.bedrooms }}</strong>
+                                    <small class="d-block text-muted">Bedrooms</small>
+                                </div>
+                                <div class="col">
+                                    <strong>{{ property.bathrooms }}</strong>
+                                    <small class="d-block text-muted">Bathrooms</small>
+                                </div>
+                                <div class="col">
+                                    <strong>{{ property.rooms_available }}</strong>
+                                    <small class="d-block text-muted">Available</small>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <strong class="h5 text-primary">${{ property.rent_per_week }}</strong>
+                                    <small class="text-muted">/week</small>
+                                </div>
+                                <span class="badge bg-success">{{ property.get_property_type_display }}</span>
+                            </div>
+
+                            {% if property.features %}
+                                <div class="mb-3">
+                                    {% for feature in property.features|slice:":3" %}
+                                        <span class="badge bg-light text-dark me-1">{{ feature }}</span>
+                                    {% endfor %}
+                                    {% if property.features|length > 3 %}
+                                        <span class="badge bg-light text-dark">+{{ property.features|length|add:"-3" }} more</span>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+
+                            <div class="mt-auto">
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'properties:detail' property.pk %}" class="btn btn-primary flex-fill">
+                                        View Details
+                                    </a>
+                                    <form method="post" action="{% url 'properties:save' property.pk %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-outline-secondary">
+                                            <i class="bi bi-bookmark"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+            <nav aria-label="Property pagination">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">Previous</a>
+                        </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">Next</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-house-slash text-muted" style="font-size: 4rem;"></i>
+            <h4 class="mt-3">No Properties Found</h4>
+            <p class="text-muted">Try adjusting your search criteria or browse all available properties.</p>
+            <a href="{% url 'properties:list' %}" class="btn btn-primary">View All Properties</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Auto-complete for location search
+document.addEventListener('DOMContentLoaded', function() {
+    const locationInput = document.querySelector('input[name="location"]');
+
+    if (locationInput) {
+        locationInput.addEventListener('input', function() {
+            const query = this.value;
+            if (query.length > 2) {
+                fetch(`{% url 'properties:search_suggestions' %}?q=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Implement autocomplete suggestions
+                        console.log('Suggestions:', data.suggestions);
+                    });
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

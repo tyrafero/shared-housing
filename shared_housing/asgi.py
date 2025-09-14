@@ -17,14 +17,14 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'shared_housing.settings.product
 
 django_asgi_app = get_asgi_application()
 
-# Import after Django setup - will add websocket routing later
-# from messaging.routing import websocket_urlpatterns
+# Import after Django setup
+from messaging.routing import websocket_urlpatterns
 
 application = ProtocolTypeRouter({
     "http": django_asgi_app,
-    # "websocket": AuthMiddlewareStack(
-    #     URLRouter(
-    #         websocket_urlpatterns
-    #     )
-    # ),
+    "websocket": AuthMiddlewareStack(
+        URLRouter(
+            websocket_urlpatterns
+        )
+    ),
 })

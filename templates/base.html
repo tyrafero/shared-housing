@@ -35,13 +35,16 @@
                             <a class="nav-link" href="{% url 'core:dashboard' %}">Dashboard</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#properties">Properties</a>
+                            <a class="nav-link" href="{% url 'properties:list' %}">Properties</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#matching">Find Roommates</a>
+                            <a class="nav-link" href="{% url 'matching:find_roommates' %}">Find Roommates</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#messages">Messages</a>
+                            <a class="nav-link" href="{% url 'groups:group_list' %}">Groups</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'messaging:conversations_list' %}">Messages</a>
                         </li>
                     {% endif %}
                 </ul>
@@ -54,7 +57,8 @@
                             </a>
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="{% url 'profiles:profile_view' %}">Profile</a></li>
-                                <li><a class="dropdown-item" href="{% url 'profiles:profile_edit' %}">Edit Profile</a></li>
+                                <li><a class="dropdown-item" href="{% url 'groups:my_groups' %}">My Groups</a></li>
+                                <li><a class="dropdown-item" href="{% url 'properties:saved' %}">Saved Properties</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{% url 'accounts:logout' %}">Logout</a></li>
                             </ul>
