@@ -59,73 +59,88 @@
     <div class="row">
         <!-- Messages Area -->
         <div class="col-lg-9">
-            <div class="card" style="height: 70vh;">
-                <!-- Messages Container -->
-                <div class="card-body p-0 d-flex flex-column" style="height: 100%;">
-                    <!-- Messages List -->
-                    <div id="messages-container" class="flex-grow-1 overflow-auto p-3" style="max-height: calc(70vh - 120px);">
-                        {% for message in messages %}
-                            <div class="message mb-3 {% if message.sender == user %}sent{% else %}received{% endif %}">
-                                <div class="d-flex {% if message.sender == user %}justify-content-end{% endif %}">
-                                    <div class="message-bubble {% if message.sender == user %}bg-primary text-white ms-5{% else %}bg-light me-5{% endif %} p-3 rounded-3 position-relative">
-                                        {% if message.sender and message.sender != user %}
-                                            <div class="fw-bold small mb-1">{{ message.sender.get_short_name }}</div>
-                                        {% endif %}
-
-                                        {% if message.message_type == 'system' %}
-                                            <div class="text-center text-muted fst-italic">
-                                                <i class="bi bi-info-circle me-1"></i>
-                                                {{ message.content }}
-                                            </div>
-                                        {% else %}
-                                            <div class="message-content">{{ message.content|linebreaks }}</div>
-                                        {% endif %}
-
-                                        <!-- Message timestamp -->
-                                        <div class="small {% if message.sender == user %}text-white-50{% else %}text-muted{% endif %} mt-1">
-                                            {{ message.created_at|date:"M d, g:i A" }}
-                                            {% if message.is_edited %}
-                                                <span class="fst-italic">(edited)</span>
-                                            {% endif %}
-                                        </div>
-
-                                        <!-- Message status for sent messages -->
-                                        {% if message.sender == user %}
-                                            <div class="message-status small text-white-50 mt-1">
-                                                <i class="bi bi-check2"></i> Sent
-                                            </div>
-                                        {% endif %}
-                                    </div>
+            <div class="chat-container" style="height: 75vh;">
+                <!-- Messages List -->
+                <div id="messages-container" class="messages-area">
+                    {% for message in messages %}
+                        {% if message.message_type == 'system' %}
+                            <div class="system-message">
+                                <div class="system-message-content">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    {{ message.content }}
                                 </div>
+                                <div class="system-message-time">{{ message.created_at|date:"M d, g:i A" }}</div>
                             </div>
-                        {% empty %}
-                            <div class="text-center text-muted py-5">
-                                <i class="bi bi-chat-dots" style="font-size: 3rem;"></i>
-                                <h5 class="mt-3">No messages yet</h5>
-                                <p>Start the conversation by sending a message below.</p>
+                        {% else %}
+                            <div class="message-wrapper {% if message.sender == user %}sent{% else %}received{% endif %}">
+                                {% if message.sender and message.sender != user %}
+                                    <div class="avatar">
+                                        <div class="avatar-circle">
+                                            {{ message.sender.get_short_name.0|upper }}
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                <div class="message-group">
+                                    {% if message.sender and message.sender != user %}
+                                        <div class="sender-name">{{ message.sender.get_short_name }}</div>
+                                    {% endif %}
+                                    <div class="message-bubble {% if message.sender == user %}sent-bubble{% else %}received-bubble{% endif %}">
+                                        <div class="message-content">{{ message.content|linebreaksbr }}</div>
+                                        <div class="message-time">{{ message.created_at|date:"g:i A" }}</div>
+                                    </div>
+                                    {% if message.sender == user %}
+                                        <div class="message-status">
+                                            <i class="bi bi-check2-all text-primary"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                {% if message.sender == user %}
+                                    <div class="avatar">
+                                        <div class="avatar-circle user-avatar">
+                                            {{ user.get_short_name.0|upper }}
+                                        </div>
+                                    </div>
+                                {% endif %}
                             </div>
-                        {% endfor %}
-                    </div>
-
-                    <!-- Message Input Form -->
-                    <div class="border-top p-3">
-                        <form id="message-form" method="post" action="{% url 'messaging:send_message' conversation.id %}" class="d-flex">
-                            {% csrf_token %}
-                            <div class="flex-grow-1 me-2">
-                                <textarea id="message-input" name="content" class="form-control" rows="2"
-                                         placeholder="Type your message..." required
-                                         style="resize: none;"></textarea>
-                            </div>
-                            <div class="d-flex flex-column justify-content-end">
-                                <button type="submit" class="btn btn-primary" id="send-btn">
-                                    <i class="bi bi-send"></i> Send
-                                </button>
-                            </div>
-                        </form>
-                        <div class="small text-muted mt-1">
-                            Press Ctrl+Enter to send
+                        {% endif %}
+                    {% empty %}
+                        <div class="empty-state">
+                            <i class="bi bi-chat-dots"></i>
+                            <h5>No messages yet</h5>
+                            <p>Start the conversation by sending a message below.</p>
                         </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Typing Indicator -->
+                <div id="typing-indicator" class="typing-indicator" style="display: none;">
+                    <div class="typing-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
                     </div>
+                    <span class="typing-text">Someone is typing...</span>
+                </div>
+
+                <!-- Message Input Form -->
+                <div class="message-input-area">
+                    <form id="message-form" method="post" action="{% url 'messaging:send_message' conversation.id %}">
+                        {% csrf_token %}
+                        <div class="input-container">
+                            <button type="button" class="attachment-btn" title="Attach file">
+                                <i class="bi bi-paperclip"></i>
+                            </button>
+                            <textarea id="message-input" name="content"
+                                     placeholder="Type a message..."
+                                     rows="1"></textarea>
+                            <button type="button" class="emoji-btn" title="Add emoji">
+                                <i class="bi bi-emoji-smile"></i>
+                            </button>
+                            <button type="submit" class="send-btn" id="send-btn">
+                                <i class="bi bi-send-fill"></i>
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -234,14 +249,82 @@ document.addEventListener('DOMContentLoaded', function() {
     const messageForm = document.getElementById('message-form');
     const messageInput = document.getElementById('message-input');
     const sendBtn = document.getElementById('send-btn');
+    const typingIndicator = document.getElementById('typing-indicator');
+
+    let lastMessageId = null;
+    let typingTimer = null;
+    let isTyping = false;
+    let pollInterval = null;
+
+    // Get the last message ID for polling
+    const messageWrappers = messagesContainer.querySelectorAll('.message-wrapper');
+    if (messageWrappers.length > 0) {
+        // We'll use timestamp as a simple way to track last message
+        lastMessageId = Date.now();
+    }
 
     // Scroll to bottom of messages
-    function scrollToBottom() {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    function scrollToBottom(smooth = true) {
+        if (smooth) {
+            messagesContainer.scrollTo({
+                top: messagesContainer.scrollHeight,
+                behavior: 'smooth'
+            });
+        } else {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
     }
 
     // Initial scroll to bottom
-    scrollToBottom();
+    scrollToBottom(false);
+
+    // Auto-resize textarea
+    function autoResize() {
+        messageInput.style.height = 'auto';
+        const newHeight = Math.min(messageInput.scrollHeight, 120);
+        messageInput.style.height = newHeight + 'px';
+    }
+
+    // Handle typing indicator
+    function showTyping() {
+        if (!isTyping) {
+            isTyping = true;
+            // In a real app, you'd send typing status to server
+        }
+    }
+
+    function hideTyping() {
+        if (isTyping) {
+            isTyping = false;
+            // In a real app, you'd send typing status to server
+        }
+    }
+
+    // Handle message input changes
+    messageInput.addEventListener('input', function() {
+        autoResize();
+
+        // Clear existing timer
+        clearTimeout(typingTimer);
+
+        if (this.value.trim()) {
+            showTyping();
+            // Hide typing indicator after 2 seconds of no typing
+            typingTimer = setTimeout(hideTyping, 2000);
+        } else {
+            hideTyping();
+        }
+    });
+
+    // Handle Enter key (send message)
+    messageInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            if (this.value.trim()) {
+                messageForm.dispatchEvent(new Event('submit'));
+            }
+        }
+    });
 
     // Handle message form submission with AJAX
     messageForm.addEventListener('submit', function(e) {
@@ -253,9 +336,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Create FormData BEFORE disabling inputs
         const formData = new FormData(this);
 
-        // Now disable form while sending
+        // Show sending state
         sendBtn.disabled = true;
-        messageInput.disabled = true;
+        sendBtn.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div>';
+
+        hideTyping();
 
         // Send message via AJAX
         fetch(this.action, {
@@ -269,122 +354,549 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success) {
                 // Add message to UI immediately
-                addMessageToUI(data.message);
+                addMessageToUI(data.message, true);
                 messageInput.value = '';
+                autoResize();
                 scrollToBottom();
+
+                // Update last message tracking
+                lastMessageId = Date.now();
             } else {
-                alert('Failed to send message: ' + (data.error || 'Unknown error'));
+                showNotification('Failed to send message: ' + (data.error || 'Unknown error'), 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Failed to send message. Please try again.');
+            showNotification('Failed to send message. Please try again.', 'error');
         })
         .finally(() => {
             // Re-enable form
             sendBtn.disabled = false;
-            messageInput.disabled = false;
+            sendBtn.innerHTML = '<i class="bi bi-send-fill"></i>';
             messageInput.focus();
         });
     });
 
-    // Handle Ctrl+Enter to send
-    messageInput.addEventListener('keydown', function(e) {
-        if (e.ctrlKey && e.key === 'Enter') {
-            e.preventDefault();
-            messageForm.dispatchEvent(new Event('submit'));
-        }
-    });
-
-    // Auto-resize textarea
-    messageInput.addEventListener('input', function() {
-        this.style.height = 'auto';
-        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-    });
-
-    function addMessageToUI(messageData) {
+    // Add message to UI
+    function addMessageToUI(messageData, isSent = false) {
         const messageDiv = document.createElement('div');
-        messageDiv.className = 'message mb-3 sent';
+        const currentTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
-        messageDiv.innerHTML = `
-            <div class="d-flex justify-content-end">
-                <div class="message-bubble bg-primary text-white ms-5 p-3 rounded-3 position-relative">
-                    <div class="message-content">${messageData.content.replace(/\n/g, '<br>')}</div>
-                    <div class="small text-white-50 mt-1">
-                        Just now
+        if (isSent) {
+            messageDiv.className = 'message-wrapper sent';
+            messageDiv.innerHTML = `
+                <div class="message-group">
+                    <div class="message-bubble sent-bubble">
+                        <div class="message-content">${messageData.content.replace(/\n/g, '<br>')}</div>
+                        <div class="message-time">${currentTime}</div>
                     </div>
-                    <div class="message-status small text-white-50 mt-1">
-                        <i class="bi bi-check2"></i> Sent
+                    <div class="message-status">
+                        <i class="bi bi-check2-all text-primary"></i>
                     </div>
                 </div>
+                <div class="avatar">
+                    <div class="avatar-circle user-avatar">
+                        {{ user.get_short_name.0|upper }}
+                    </div>
+                </div>
+            `;
+
+            // Track this message to prevent duplicates
+            const uniqueId = messageData.content.trim() + '|' + messageData.created_at;
+            existingMessageIds.add(uniqueId);
+
+        } else {
+            // For received messages
+            messageDiv.className = 'message-wrapper received';
+            const senderName = messageData.sender ? messageData.sender.name : 'Unknown';
+            const senderInitial = senderName.charAt(0).toUpperCase();
+
+            messageDiv.innerHTML = `
+                <div class="avatar">
+                    <div class="avatar-circle">
+                        ${senderInitial}
+                    </div>
+                </div>
+                <div class="message-group">
+                    <div class="sender-name">${senderName}</div>
+                    <div class="message-bubble received-bubble">
+                        <div class="message-content">${messageData.content.replace(/\n/g, '<br>')}</div>
+                        <div class="message-time">${currentTime}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        messagesContainer.appendChild(messageDiv);
+        animateMessage(messageDiv);
+    }
+
+    // Add system message to UI
+    function addSystemMessageToUI(messageData) {
+        const messageDiv = document.createElement('div');
+        const currentTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+        messageDiv.className = 'system-message';
+        messageDiv.innerHTML = `
+            <div class="system-message-content">
+                <i class="bi bi-info-circle me-1"></i>
+                ${messageData.content}
             </div>
+            <div class="system-message-time">${currentTime}</div>
         `;
 
         messagesContainer.appendChild(messageDiv);
+        animateMessage(messageDiv);
     }
+
+    // Animate message appearance
+    function animateMessage(messageDiv) {
+        messageDiv.style.opacity = '0';
+        messageDiv.style.transform = 'translateY(10px)';
+        requestAnimationFrame(() => {
+            messageDiv.style.transition = 'all 0.3s ease-out';
+            messageDiv.style.opacity = '1';
+            messageDiv.style.transform = 'translateY(0)';
+        });
+    }
+
+    // Simple notification system
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type === 'error' ? 'danger' : 'info'} alert-dismissible fade show position-fixed`;
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 1050; max-width: 300px;';
+        notification.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        document.body.appendChild(notification);
+
+        // Auto-remove after 3 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 3000);
+    }
+
+    // Track existing message IDs to prevent duplicates
+    let existingMessageIds = new Set();
+
+    // Initialize with existing messages
+    function initializeExistingMessages() {
+        // Get all message elements and extract any IDs we can find
+        const messages = messagesContainer.querySelectorAll('.message-wrapper, .system-message');
+        messages.forEach((msg, index) => {
+            // Since we don't have actual message IDs in the DOM, we'll use content + timestamp as unique identifier
+            const content = msg.querySelector('.message-content, .system-message-content');
+            const time = msg.querySelector('.message-time, .system-message-time');
+            if (content && time) {
+                const uniqueId = content.textContent.trim() + '|' + time.textContent.trim();
+                existingMessageIds.add(uniqueId);
+            }
+        });
+        console.log('Initialized with', existingMessageIds.size, 'existing messages');
+    }
+
+    // Initialize on page load
+    initializeExistingMessages();
+
+    // Poll for new messages every 5 seconds (reduced frequency)
+    function pollForNewMessages() {
+        fetch(`{% url 'messaging:messages_api' conversation.id %}?offset=0&limit=50`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.messages && data.messages.length > 0) {
+                // Process messages in chronological order (reverse the array since API returns newest first)
+                const messagesInOrder = data.messages.reverse();
+
+                messagesInOrder.forEach(messageData => {
+                    // Create unique identifier for this message
+                    const uniqueId = messageData.content.trim() + '|' + messageData.created_at;
+
+                    // Skip if we already have this message
+                    if (existingMessageIds.has(uniqueId)) {
+                        return;
+                    }
+
+                    // Add to our tracking set
+                    existingMessageIds.add(uniqueId);
+
+                    // Only add messages from other users (not current user's own messages)
+                    if (!messageData.sender || messageData.sender.id !== {{ current_user_id }}) {
+                        if (messageData.message_type === 'system') {
+                            addSystemMessageToUI(messageData);
+                        } else {
+                            addMessageToUI(messageData, false);
+                        }
+                        scrollToBottom();
+                    }
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Polling error:', error);
+        });
+    }
+
+    // Start polling for new messages every 5 seconds
+    pollInterval = setInterval(pollForNewMessages, 5000);
 
     // Focus on message input
     messageInput.focus();
 
-    // Simple auto-refresh for new messages (in production, use WebSockets)
-    let lastMessageCount = {{ messages|length }};
-    setInterval(function() {
-        // This is a simple polling approach - in production you'd use WebSockets
-        // For now, we'll just indicate when new messages might be available
-        // You can implement more sophisticated real-time updates later
-    }, 5000);
+    // Clean up on page unload
+    window.addEventListener('beforeunload', function() {
+        if (pollInterval) {
+            clearInterval(pollInterval);
+        }
+        hideTyping();
+    });
+
+    // Handle visibility change to pause/resume polling
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            if (pollInterval) {
+                clearInterval(pollInterval);
+            }
+        } else {
+            pollInterval = setInterval(pollForNewMessages, 5000);
+            pollForNewMessages(); // Poll immediately when page becomes visible
+        }
+    });
 });
 </script>
 
 <style>
-/* Custom styles for messages */
-.message-bubble {
-    max-width: 70%;
-    word-wrap: break-word;
+/* Messenger-like Chat Styles */
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+    overflow: hidden;
 }
 
-.message.sent .message-bubble {
-    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-}
-
-.message.received .message-bubble {
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
-}
-
-#messages-container {
+.messages-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    background: linear-gradient(135deg, #f8f9ff 0%, #fafbff 100%);
     scroll-behavior: smooth;
 }
 
-#messages-container::-webkit-scrollbar {
+.messages-area::-webkit-scrollbar {
     width: 6px;
 }
 
-#messages-container::-webkit-scrollbar-track {
-    background: #f1f1f1;
+.messages-area::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.messages-area::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.2);
     border-radius: 3px;
 }
 
-#messages-container::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 3px;
+.messages-area::-webkit-scrollbar-thumb:hover {
+    background: rgba(0,0,0,0.3);
 }
 
-#messages-container::-webkit-scrollbar-thumb:hover {
-    background: #a1a1a1;
+.message-wrapper {
+    display: flex;
+    align-items: flex-end;
+    margin-bottom: 16px;
+    max-width: 75%;
 }
 
+.message-wrapper.sent {
+    margin-left: auto;
+    flex-direction: row-reverse;
+}
+
+.avatar {
+    width: 32px;
+    height: 32px;
+    margin: 0 8px;
+    flex-shrink: 0;
+}
+
+.avatar-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.user-avatar {
+    background: linear-gradient(45deg, #007bff 0%, #0056b3 100%) !important;
+}
+
+.message-group {
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+}
+
+.sent .message-group {
+    align-items: flex-end;
+}
+
+.sender-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: #65676b;
+    margin-bottom: 4px;
+    margin-left: 12px;
+}
+
+.message-bubble {
+    position: relative;
+    padding: 12px 16px;
+    border-radius: 18px;
+    max-width: 100%;
+    word-wrap: break-word;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.sent-bubble {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    border-bottom-right-radius: 6px;
+}
+
+.received-bubble {
+    background: #f0f2f5;
+    color: #1c1e21;
+    border-bottom-left-radius: 6px;
+}
+
+.message-content {
+    line-height: 1.4;
+    margin: 0;
+    word-break: break-word;
+}
+
+.message-time {
+    font-size: 11px;
+    opacity: 0.7;
+    margin-top: 4px;
+    text-align: right;
+}
+
+.received-bubble .message-time {
+    text-align: left;
+    color: #65676b;
+}
+
+.message-status {
+    font-size: 12px;
+    margin-top: 2px;
+    opacity: 0.8;
+}
+
+/* System Messages */
+.system-message {
+    text-align: center;
+    margin: 16px 0;
+}
+
+.system-message-content {
+    display: inline-block;
+    background: rgba(0,0,0,0.05);
+    color: #65676b;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 13px;
+    font-style: italic;
+}
+
+.system-message-time {
+    font-size: 11px;
+    color: #8a8d91;
+    margin-top: 4px;
+}
+
+/* Typing Indicator */
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    color: #65676b;
+    font-size: 13px;
+}
+
+.typing-dots {
+    display: flex;
+    margin-right: 8px;
+}
+
+.typing-dots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #007bff;
+    margin: 0 2px;
+    animation: typing 1.4s infinite;
+}
+
+.typing-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typing {
+    0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.4;
+    }
+    30% {
+        transform: translateY(-10px);
+        opacity: 1;
+    }
+}
+
+/* Message Input Area */
+.message-input-area {
+    padding: 12px 16px;
+    background: white;
+    border-top: 1px solid #e4e6ea;
+}
+
+.input-container {
+    display: flex;
+    align-items: flex-end;
+    background: #f0f2f5;
+    border-radius: 20px;
+    padding: 8px 12px;
+    gap: 8px;
+}
+
+.attachment-btn, .emoji-btn {
+    background: none;
+    border: none;
+    color: #007bff;
+    font-size: 18px;
+    padding: 6px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.attachment-btn:hover, .emoji-btn:hover {
+    background: rgba(0,123,255,0.1);
+}
+
+#message-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    resize: none;
+    outline: none;
+    font-size: 14px;
+    line-height: 1.4;
+    max-height: 120px;
+    min-height: 20px;
+    padding: 8px 0;
+}
+
+#message-input::placeholder {
+    color: #8a8d91;
+}
+
+.send-btn {
+    background: #007bff;
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0,123,255,0.3);
+}
+
+.send-btn:hover {
+    background: #0056b3;
+    transform: scale(1.05);
+}
+
+.send-btn:disabled {
+    opacity: 0.5;
+    transform: none;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #65676b;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    opacity: 0.3;
+    margin-bottom: 16px;
+}
+
+.empty-state h5 {
+    margin-bottom: 8px;
+    color: #1c1e21;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-    .message-bubble {
+    .message-wrapper {
         max-width: 85%;
     }
 
-    .message.sent .message-bubble {
-        margin-left: 1rem;
+    .chat-container {
+        height: 70vh !important;
     }
 
-    .message.received .message-bubble {
-        margin-right: 1rem;
+    .messages-area {
+        padding: 12px;
+    }
+
+    .message-input-area {
+        padding: 8px 12px;
+    }
+}
+
+/* Smooth animations */
+.message-wrapper {
+    animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 </style>

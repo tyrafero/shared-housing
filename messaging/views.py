@@ -126,10 +126,7 @@ def send_message(request, conversation_id):
             return JsonResponse({'error': 'Failed to send message'}, status=500)
     else:
         # Regular form submission - redirect back to conversation
-        if message:
-            messages.success(request, 'Message sent!')
-        else:
-            messages.error(request, 'Failed to send message')
+        # Messages are handled in the conversation interface
         return redirect('messaging:conversation_detail', conversation_id=conversation.id)
 
 
@@ -155,7 +152,6 @@ def start_conversation(request):
         ).exclude(id=request.user.id)
 
         if not participants:
-            messages.error(request, 'Please select at least one participant')
             return redirect('messaging:conversations_list')
 
         property_listing = None
@@ -179,7 +175,7 @@ def start_conversation(request):
                 content=initial_message.strip()
             )
 
-        messages.success(request, f'Conversation started with {", ".join([p.get_short_name() for p in participants])}!')
+        # Conversation started - redirect to conversation
         return redirect('messaging:conversation_detail', conversation_id=conversation.id)
 
     # GET request - show form
@@ -194,7 +190,8 @@ def start_conversation(request):
                 profile_completed=True
             )
         except (User.DoesNotExist, ValueError):
-            messages.warning(request, 'Selected user not found or not available for messaging.')
+            # User not found, continue with form
+            pass
 
     # Get potential participants (users with complete profiles)
     potential_participants = User.objects.filter(
@@ -218,7 +215,6 @@ def property_inquiry(request, property_id):
     message_content = request.POST.get('message', '')
 
     if not message_content.strip():
-        messages.error(request, 'Please provide an inquiry message')
         return redirect('properties:detail', pk=property_id)
 
     try:
@@ -229,11 +225,9 @@ def property_inquiry(request, property_id):
             message_content=message_content
         )
 
-        messages.success(request, 'Your inquiry has been sent!')
         return redirect('messaging:conversation_detail', conversation_id=conversation.id)
 
     except ValueError as e:
-        messages.error(request, str(e))
         return redirect('properties:detail', pk=property_id)
 
 
@@ -243,7 +237,6 @@ def start_roommate_chat(request, user_id):
     other_user = get_object_or_404(User, id=user_id, is_active=True)
 
     if other_user == request.user:
-        messages.error(request, "You cannot start a conversation with yourself")
         return redirect('core:dashboard')
 
     messaging_service = MessagingService()
@@ -383,10 +376,8 @@ def leave_conversation(request, conversation_id):
     )
 
     if success:
-        messages.success(request, 'You have left the conversation')
         return redirect('messaging:conversations_list')
     else:
-        messages.error(request, 'Failed to leave conversation')
         return redirect('messaging:conversation_detail', conversation_id=conversation_id)
 
 

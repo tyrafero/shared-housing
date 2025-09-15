@@ -20,7 +20,6 @@ def matching_dashboard(request):
 
     # Check if user has completed profile
     if not getattr(request.user, 'profile_completed', False):
-        messages.info(request, 'Please complete your profile to access matching features.')
         return redirect('profiles:setup')
 
     matching_service = MatchingService()
@@ -55,7 +54,6 @@ def find_roommates(request):
     """Search and filter potential roommates"""
 
     if not getattr(request.user, 'profile_completed', False):
-        messages.info(request, 'Please complete your profile to search for roommates.')
         return redirect('profiles:setup')
 
     # Base queryset - all users except current user with completed profiles
@@ -170,7 +168,6 @@ def compatibility_detail(request, user_id):
     )
 
     if other_user == request.user:
-        messages.error(request, "You can't view compatibility with yourself.")
         return redirect('matching:find_roommates')
 
     matching_service = MatchingService()
@@ -194,7 +191,6 @@ def connect_with_user(request, user_id):
     other_user = get_object_or_404(User, id=user_id, is_active=True)
 
     if other_user == request.user:
-        messages.error(request, "You can't connect with yourself.")
         return redirect('matching:find_roommates')
 
     # Handle GET request - show confirmation page
@@ -249,7 +245,6 @@ def connect_with_user(request, user_id):
 
         messaging_service.send_system_message(conversation, welcome_msg)
 
-    messages.success(request, f'Connected with {other_user.get_short_name()}!')
     return redirect('messaging:conversation_detail', conversation_id=conversation.id)
 
 
@@ -276,7 +271,6 @@ def dismiss_recommendation(request, recommendation_id):
         was_recommended=True
     )
 
-    messages.success(request, 'Recommendation dismissed.')
     return redirect('matching:my_matches')
 
 

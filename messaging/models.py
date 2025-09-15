@@ -116,21 +116,13 @@ class Conversation(models.Model):
     def get_or_create_direct_conversation(cls, user1, user2):
         """Get or create a direct conversation between two users"""
         # Find existing conversation between these users
-        conversation = cls.objects.filter(
-            conversation_type='direct',
-            participants=user1
-        ).filter(
-            participants=user2
-        ).annotate(
-            participant_count=models.Count('participants')
-        ).filter(
-            participant_count=2
-        ).first()
+        # Use a more reliable approach to find conversations with exactly these 2 participants
+        for conversation in cls.objects.filter(conversation_type='direct'):
+            participant_ids = set(conversation.participants.values_list('id', flat=True))
+            if participant_ids == {user1.id, user2.id}:
+                return conversation, False
 
-        if conversation:
-            return conversation, False
-
-        # Create new conversation
+        # Create new conversation if none found
         conversation = cls.objects.create(
             conversation_type='direct'
         )
