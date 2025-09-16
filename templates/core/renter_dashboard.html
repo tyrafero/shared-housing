@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Renter Dashboard - SharedHousing{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Welcome Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="mb-2">Welcome back, {{ user.get_short_name }}!</h2>
+                            <p class="mb-0 lead">Find your perfect room and compatible roommates</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <i class="bi bi-house-heart" style="font-size: 4rem; opacity: 0.3;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-house-door display-4 mb-2"></i>
+                    <h4>{{ recent_activity.new_properties }}</h4>
+                    <p class="mb-0">New Properties This Week</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-people display-4 mb-2"></i>
+                    <h4>{{ roommate_recommendations|length }}</h4>
+                    <p class="mb-0">Roommate Matches</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-chat-dots display-4 mb-2"></i>
+                    <h4>{{ unread_count }}</h4>
+                    <p class="mb-0">Unread Messages</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card bg-secondary text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-collection display-4 mb-2"></i>
+                    <h4>{{ user_groups|length }}</h4>
+                    <p class="mb-0">My Groups</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Properties -->
+        <div class="col-lg-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-house-door me-2"></i>Recent Properties</h5>
+                    <a href="{% url 'properties:list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_properties %}
+                        <div class="row">
+                            {% for property in recent_properties %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border">
+                                        <div class="card-body">
+                                            <h6 class="card-title">{{ property.title }}</h6>
+                                            <p class="card-text text-muted small">
+                                                <i class="bi bi-geo-alt me-1"></i>{{ property.location }}
+                                            </p>
+                                            <p class="card-text">
+                                                <strong>${{ property.price_per_week }}/week</strong> •
+                                                {{ property.rooms_available }} room{{ property.rooms_available|pluralize }} available
+                                            </p>
+                                            <a href="{% url 'properties:detail' property.pk %}" class="btn btn-sm btn-primary">View Details</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-house-door" style="font-size: 3rem; opacity: 0.3;"></i>
+                            <h6 class="mt-3">No properties available yet</h6>
+                            <p class="mb-0">Check back later for new listings</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Roommate Matches & Groups -->
+        <div class="col-lg-4">
+            <!-- Roommate Matches -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="bi bi-people me-2"></i>Roommate Matches</h6>
+                    <a href="{% url 'matching:find_roommates' %}" class="btn btn-sm btn-outline-primary">Find More</a>
+                </div>
+                <div class="card-body">
+                    {% if roommate_recommendations %}
+                        {% for recommendation in roommate_recommendations %}
+                            <div class="d-flex align-items-center mb-3 {% if not forloop.last %}border-bottom pb-3{% endif %}">
+                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3"
+                                     style="width: 40px; height: 40px;">
+                                    <i class="bi bi-person text-white"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ recommendation.recommended_user.get_short_name }}</h6>
+                                    <p class="mb-0 small text-muted">
+                                        {% if recommendation.compatibility_score %}
+                                            {{ recommendation.compatibility_score.overall_score }}% Match
+                                        {% else %}
+                                            New Match
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <a href="{% url 'matching:compatibility_detail' recommendation.recommended_user.id %}"
+                                   class="btn btn-sm btn-outline-primary">View</a>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-3">
+                            <i class="bi bi-people" style="font-size: 2rem; opacity: 0.3;"></i>
+                            <p class="mb-0 mt-2 small">No matches yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- My Groups -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="bi bi-collection me-2"></i>My Groups</h6>
+                    <a href="{% url 'groups:group_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if user_groups %}
+                        {% for membership in user_groups %}
+                            <div class="d-flex align-items-center mb-3 {% if not forloop.last %}border-bottom pb-3{% endif %}">
+                                <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-3"
+                                     style="width: 40px; height: 40px;">
+                                    <i class="bi bi-collection text-white"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ membership.group.name }}</h6>
+                                    <p class="mb-0 small text-muted">{{ membership.group.current_member_count }} members</p>
+                                </div>
+                                <a href="{% url 'groups:group_detail' membership.group.id %}"
+                                   class="btn btn-sm btn-outline-secondary">View</a>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-3">
+                            <i class="bi bi-collection" style="font-size: 2rem; opacity: 0.3;"></i>
+                            <p class="mb-0 mt-2 small">No groups yet</p>
+                            <a href="{% url 'groups:group_list' %}" class="btn btn-sm btn-primary mt-2">Find Groups</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Conversations -->
+    {% if recent_conversations %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-chat-dots me-2"></i>Recent Conversations</h5>
+                    <a href="{% url 'messaging:conversations_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for conversation in recent_conversations %}
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card border">
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ conversation.title|default:"Direct Message" }}</h6>
+                                        <p class="card-text small text-muted">
+                                            {% for participant in conversation.participants.all %}
+                                                {% if participant != user %}
+                                                    <i class="bi bi-person me-1"></i>{{ participant.get_short_name }}
+                                                {% endif %}
+                                            {% endfor %}
+                                        </p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted">{{ conversation.last_message_at|timesince }} ago</small>
+                                            <a href="{% url 'messaging:conversation_detail' conversation.id %}"
+                                               class="btn btn-sm btn-primary">Open</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Quick Actions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h5 class="mb-3">Quick Actions</h5>
+                    <div class="d-flex justify-content-center gap-3 flex-wrap">
+                        <a href="{% url 'properties:list' %}" class="btn btn-primary">
+                            <i class="bi bi-search me-2"></i>Search Properties
+                        </a>
+                        <a href="{% url 'matching:find_roommates' %}" class="btn btn-info">
+                            <i class="bi bi-people me-2"></i>Find Roommates
+                        </a>
+                        <a href="{% url 'groups:group_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-collection me-2"></i>Join Groups
+                        </a>
+                        <a href="{% url 'messaging:start_conversation' %}" class="btn btn-success">
+                            <i class="bi bi-chat-plus me-2"></i>Start Chat
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

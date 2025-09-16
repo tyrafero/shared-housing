@@ -4,6 +4,9 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 from django.urls import reverse
 from decimal import Decimal
+import logging
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -154,12 +157,52 @@ class Property(models.Model):
     def rooms_remaining(self):
         return self.rooms_available
 
+    def save(self, *args, **kwargs):
+        """Override save to automatically geocode address if coordinates are missing"""
+        # Check if we need to geocode (no coordinates or address changed)
+        need_geocoding = False
+
+        if not self.latitude or not self.longitude:
+            need_geocoding = True
+            logger.info(f"Property {self.title} missing coordinates, will geocode")
+        elif self.pk:  # Existing property - check if address changed
+            try:
+                old_instance = Property.objects.get(pk=self.pk)
+                if (old_instance.address != self.address or
+                    old_instance.suburb != self.suburb or
+                    old_instance.state != self.state):
+                    need_geocoding = True
+                    logger.info(f"Property {self.title} address changed, will re-geocode")
+            except Property.DoesNotExist:
+                pass
+
+        # Perform geocoding if needed
+        if need_geocoding and self.address and self.suburb and self.state:
+            try:
+                from .geocoding import GeocodingService
+                lat, lon = GeocodingService.geocode_with_retry(
+                    address=self.address,
+                    suburb=self.suburb,
+                    state=self.state
+                )
+                if lat and lon:
+                    self.latitude = lat
+                    self.longitude = lon
+                    logger.info(f"Successfully geocoded {self.title}: ({lat}, {lon})")
+                else:
+                    logger.warning(f"Failed to geocode {self.title}: {self.address}, {self.suburb}, {self.state}")
+            except Exception as e:
+                logger.error(f"Error during geocoding for {self.title}: {e}")
+
+        super().save(*args, **kwargs)
+
 
 class PropertyImage(models.Model):
     """Property images for listings"""
 
     property_listing = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to='properties/images/')
+    image = models.ImageField(upload_to='properties/images/', blank=True, null=True)
+    image_url = models.URLField(blank=True, null=True, help_text="Alternative to uploading: provide image URL")
     caption = models.CharField(max_length=200, blank=True)
     is_primary = models.BooleanField(default=False)
     order = models.PositiveIntegerField(default=0)
@@ -171,6 +214,15 @@ class PropertyImage(models.Model):
 
     def __str__(self):
         return f"Image for {self.property_listing.title}"
+
+    @property
+    def image_src(self):
+        """Return the image source - either uploaded file URL or external URL"""
+        if self.image:
+            return self.image.url
+        elif self.image_url:
+            return self.image_url
+        return None
 
 
 class RoomListing(models.Model):

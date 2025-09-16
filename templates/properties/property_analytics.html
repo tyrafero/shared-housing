@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - SharedHousing{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Header -->
+        <div class="col-12">
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-info rounded-circle d-inline-flex align-items-center justify-content-center me-3"
+                     style="width: 50px; height: 50px;">
+                    <i class="bi bi-graph-up text-white" style="font-size: 1.5rem;"></i>
+                </div>
+                <div>
+                    <h1 class="h2 mb-0">{{ title }}</h1>
+                    <p class="text-muted mb-0">Performance insights for your property listing</p>
+                </div>
+                <div class="ms-auto">
+                    <a href="{% url 'properties:detail' property.pk %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Property
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Property Summary -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-body">
+                    <h5 class="card-title">{{ property.title }}</h5>
+                    <p class="text-muted">
+                        <i class="bi bi-geo-alt me-1"></i>
+                        {{ property.address }}, {{ property.suburb }}, {{ property.state }}
+                    </p>
+                    <div class="row g-3">
+                        <div class="col-auto">
+                            <span class="badge bg-primary">{{ property.get_property_type_display }}</span>
+                        </div>
+                        <div class="col-auto">
+                            <span class="text-success"><strong>${{ property.rent_per_week }}/week</strong></span>
+                        </div>
+                        <div class="col-auto">
+                            <span class="text-muted">{{ property.rooms_available }} room{{ property.rooms_available|pluralize }} available</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics Cards -->
+    <div class="row g-4 mb-4">
+        <!-- Total Views -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-3">
+                        <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                            <i class="bi bi-eye text-primary" style="font-size: 1.5rem;"></i>
+                        </div>
+                    </div>
+                    <h3 class="card-title">{{ total_views }}</h3>
+                    <p class="card-text text-muted mb-0">Total Views</p>
+                    <small class="text-muted">Property page visits</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Inquiries -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-3">
+                        <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                            <i class="bi bi-envelope text-success" style="font-size: 1.5rem;"></i>
+                        </div>
+                    </div>
+                    <h3 class="card-title">{{ total_inquiries }}</h3>
+                    <p class="card-text text-muted mb-0">Total Inquiries</p>
+                    <small class="text-muted">Interested renters</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Days Listed -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-3">
+                        <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                            <i class="bi bi-calendar text-info" style="font-size: 1.5rem;"></i>
+                        </div>
+                    </div>
+                    <h3 class="card-title">{{ days_listed }}</h3>
+                    <p class="card-text text-muted mb-0">Days Listed</p>
+                    <small class="text-muted">Time on market</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Avg Inquiries per Day -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-3">
+                        <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                            <i class="bi bi-graph-up text-warning" style="font-size: 1.5rem;"></i>
+                        </div>
+                    </div>
+                    <h3 class="card-title">{{ avg_inquiries_per_day }}</h3>
+                    <p class="card-text text-muted mb-0">Avg per Day</p>
+                    <small class="text-muted">Inquiry rate</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Insights -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-lightbulb me-2"></i>Performance Insights
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if total_inquiries == 0 %}
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-info-circle me-2"></i>No inquiries yet</h6>
+                            <p class="mb-0">Consider these tips to attract more interest:</p>
+                            <ul class="mt-2 mb-0">
+                                <li>Add high-quality photos of your property</li>
+                                <li>Write a detailed, appealing description</li>
+                                <li>Check if your rent is competitive for the area</li>
+                                <li>Highlight unique features and amenities</li>
+                            </ul>
+                        </div>
+                    {% elif avg_inquiries_per_day < 0.5 %}
+                        <div class="alert alert-warning">
+                            <h6><i class="bi bi-exclamation-triangle me-2"></i>Low inquiry rate</h6>
+                            <p class="mb-0">You're getting {{ avg_inquiries_per_day }} inquiries per day. Consider:</p>
+                            <ul class="mt-2 mb-0">
+                                <li>Reviewing your property pricing</li>
+                                <li>Adding more photos and details</li>
+                                <li>Checking similar properties in your area</li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-success">
+                            <h6><i class="bi bi-check-circle me-2"></i>Good performance!</h6>
+                            <p class="mb-0">Your property is attracting {{ avg_inquiries_per_day }} inquiries per day. Keep up the good work!</p>
+                        </div>
+                    {% endif %}
+
+                    <div class="mt-4">
+                        <h6>Quick Actions</h6>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <a href="{% url 'properties:edit' property.pk %}" class="btn btn-primary">
+                                <i class="bi bi-pencil me-2"></i>Edit Property
+                            </a>
+                            <button class="btn btn-outline-secondary" disabled>
+                                <i class="bi bi-camera me-2"></i>Add Photos (Coming Soon)
+                            </button>
+                            <button class="btn btn-outline-secondary" disabled>
+                                <i class="bi bi-share me-2"></i>Share Listing (Coming Soon)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Property Status -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="bi bi-info-square me-2"></i>Property Status
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Status:</span>
+                        <span class="badge bg-success">Active</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Available From:</span>
+                        <span>{{ property.available_from|date:"M d, Y" }}</span>
+                    </div>
+                    {% if property.available_until %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Available Until:</span>
+                        <span>{{ property.available_until|date:"M d, Y" }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Last Updated:</span>
+                        <span class="text-muted small">{{ property.date_modified|timesince }} ago</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Note -->
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-graph-up me-2"></i>Analytics Note
+                    </h6>
+                    <p class="card-text small text-muted mb-0">
+                        These analytics are basic metrics. More detailed insights including view tracking,
+                        geographic data, and conversion rates will be available in future updates.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

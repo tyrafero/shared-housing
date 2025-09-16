@@ -18,8 +18,8 @@ User = get_user_model()
 def matching_dashboard(request):
     """Main matching dashboard"""
 
-    # Check if user has completed profile
-    if not getattr(request.user, 'profile_completed', False):
+    # Check if user has completed profile (only renters need roommate matching)
+    if not getattr(request.user, 'profile_completed', False) and request.user.is_renter:
         return redirect('profiles:setup')
 
     matching_service = MatchingService()
@@ -53,14 +53,20 @@ def matching_dashboard(request):
 def find_roommates(request):
     """Search and filter potential roommates"""
 
-    if not getattr(request.user, 'profile_completed', False):
+    if not getattr(request.user, 'profile_completed', False) and request.user.is_renter:
         return redirect('profiles:setup')
 
     # Base queryset - all users except current user with completed profiles
+    # Exclude admin users from regular user searches
     users = User.objects.filter(
         profile_completed=True,
-        is_active=True
-    ).exclude(id=request.user.id).select_related('profile')
+        is_active=True,
+        user_type__in=['renter', 'landlord']  # Only show renters and landlords
+    ).exclude(
+        id=request.user.id
+    ).exclude(
+        user_type='admin'  # Hide admin users
+    ).select_related('profile')
 
     # Search by name/email
     search_query = request.GET.get('search', '').strip()
@@ -132,7 +138,7 @@ def find_roommates(request):
 def my_matches(request):
     """View user's matches and recommendations"""
 
-    if not getattr(request.user, 'profile_completed', False):
+    if not getattr(request.user, 'profile_completed', False) and request.user.is_renter:
         return redirect('profiles:setup')
 
     # Get user's active recommendations
@@ -354,8 +360,13 @@ def api_user_search(request):
     users = User.objects.filter(
         Q(first_name__icontains=query) | Q(last_name__icontains=query),
         profile_completed=True,
-        is_active=True
-    ).exclude(id=request.user.id)[:10]
+        is_active=True,
+        user_type__in=['renter', 'landlord']  # Only show renters and landlords
+    ).exclude(
+        id=request.user.id
+    ).exclude(
+        user_type='admin'  # Hide admin users
+    )[:10]
 
     users_data = []
     for user in users:

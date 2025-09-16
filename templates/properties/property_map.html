@@ -1,0 +1,351 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Property Map - SharedHousing{% endblock %}
+
+{% block extra_head %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<style>
+    #property-map {
+        height: 60vh;
+        width: 100%;
+        border-radius: 8px;
+    }
+    .property-popup {
+        max-width: 250px;
+    }
+    .property-popup .popup-image {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 4px;
+        margin-bottom: 8px;
+    }
+    .property-popup .popup-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 4px;
+        line-height: 1.3;
+    }
+    .property-popup .popup-address {
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 8px;
+    }
+    .property-popup .popup-price {
+        font-size: 18px;
+        font-weight: 700;
+        color: #28a745;
+        margin-bottom: 8px;
+    }
+    .property-popup .popup-details {
+        font-size: 12px;
+        color: #888;
+        margin-bottom: 8px;
+    }
+    .map-controls {
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <h1 class="h3 mb-2">Properties Map View</h1>
+            <p class="text-muted">{{ properties.count }} properties with location data</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'properties:list' %}" class="btn btn-outline-primary">
+                <i class="bi bi-list"></i> List View
+            </a>
+            <a href="{% url 'properties:saved' %}" class="btn btn-outline-secondary ms-2">
+                <i class="bi bi-bookmark"></i> Saved
+            </a>
+        </div>
+    </div>
+
+    <!-- Search Controls -->
+    <div class="map-controls">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label small">Search Properties</label>
+                <input type="text" name="search" class="form-control" placeholder="Property title, suburb..." value="{{ search_query }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Min Price</label>
+                <input type="number" name="min_price" class="form-control" placeholder="$/week" value="{{ min_price }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Max Price</label>
+                <input type="number" name="max_price" class="form-control" placeholder="$/week" value="{{ max_price }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Property Type</label>
+                <select name="property_type" class="form-select">
+                    <option value="">Any Type</option>
+                    {% for value, display in property_types %}
+                        <option value="{{ value }}" {% if property_type == value %}selected{% endif %}>{{ display }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Bedrooms</label>
+                <select name="bedrooms" class="form-select">
+                    <option value="">Any</option>
+                    {% for i in "123456"|make_list %}
+                        <option value="{{ i }}" {% if bedrooms == i %}selected{% endif %}>{{ i }}+</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-1">
+                <label class="form-label small">&nbsp;</label>
+                <button type="submit" class="btn btn-primary d-block w-100">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Map Container -->
+    <div class="row">
+        <div class="col-12">
+            <div id="property-map"></div>
+        </div>
+    </div>
+
+    <!-- Properties Summary -->
+    {% if properties %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-pin-map me-2"></i>Properties on Map ({{ properties.count }})
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        {% for property in properties|slice:":12" %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="d-flex align-items-center p-2 border rounded">
+                                {% if property.images.first and property.images.first.image_src %}
+                                    <img src="{{ property.images.first.image_src }}" class="rounded me-2" style="width: 50px; height: 50px; object-fit: cover;">
+                                {% else %}
+                                    <div class="bg-light rounded me-2 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                        <i class="bi bi-house text-muted"></i>
+                                    </div>
+                                {% endif %}
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold small">{{ property.title|truncatechars:35 }}</div>
+                                    <div class="text-muted small">{{ property.suburb }}</div>
+                                    <div class="text-success small fw-bold">${{ property.rent_per_week }}/week</div>
+                                </div>
+                                <a href="{% url 'properties:detail' property.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% if properties.count > 12 %}
+                        <div class="col-12 text-center mt-3">
+                            <small class="text-muted">
+                                Showing first 12 properties. <a href="{% url 'properties:list' %}">View all {{ properties.count }} properties</a>
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>No properties found with location data.</strong><br>
+                <small>Properties need latitude/longitude coordinates to appear on the map. Try adjusting your search filters or <a href="{% url 'properties:list' %}">browse all properties</a>.</small>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- Leaflet JavaScript -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize the map centered on Australia
+    var map = L.map('property-map').setView([-37.8136, 144.9631], 10); // Default to Melbourne
+
+    // Add OpenStreetMap tiles (free!)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+    }).addTo(map);
+
+    // Property data from Django
+    var properties = [
+        {% for property in properties %}
+        {% if property.latitude and property.longitude %}
+        {
+            id: {{ property.id }},
+            lat: {{ property.latitude }},
+            lng: {{ property.longitude }},
+            title: "{{ property.title|escapejs }}",
+            address: "{{ property.address|escapejs }}, {{ property.suburb|escapejs }}, {{ property.state|escapejs }}",
+            price: "{{ property.rent_per_week }}",
+            bedrooms: {{ property.bedrooms }},
+            bathrooms: {{ property.bathrooms }},
+            property_type: "{{ property.get_property_type_display|escapejs }}",
+            rooms_available: {{ property.rooms_available }},
+            image_url: {% if property.images.first and property.images.first.image_src %}"{{ property.images.first.image_src|escapejs }}"{% else %}null{% endif %},
+            detail_url: "{% url 'properties:detail' property.pk %}"
+        }{% if not forloop.last %},{% endif %}
+        {% endif %}
+        {% endfor %}
+    ];
+
+    // Custom property icon
+    var propertyIcon = L.divIcon({
+        className: 'custom-property-marker',
+        html: '<div style="background-color: #28a745; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); font-size: 12px; font-weight: bold;"><i class="bi bi-house-fill"></i></div>',
+        iconSize: [30, 30],
+        iconAnchor: [15, 15]
+    });
+
+    // Add markers to map
+    var markers = [];
+    properties.forEach(function(property) {
+        var marker = L.marker([property.lat, property.lng], {icon: propertyIcon}).addTo(map);
+
+        // Create popup content
+        var popupContent = `
+            <div class="property-popup">
+                ${property.image_url ? `<img src="${property.image_url}" class="popup-image" alt="Property image">` : ''}
+                <div class="popup-title">${property.title}</div>
+                <div class="popup-address">${property.address}</div>
+                <div class="popup-price">$${property.price}/week</div>
+                <div class="popup-details">
+                    ${property.bedrooms} bed • ${property.bathrooms} bath • ${property.rooms_available} available
+                </div>
+                <div class="text-center">
+                    <a href="${property.detail_url}" class="btn btn-primary btn-sm">View Details</a>
+                </div>
+            </div>
+        `;
+
+        marker.bindPopup(popupContent);
+        markers.push(marker);
+    });
+
+    // Handle map centering
+    var searchQuery = "{{ search_query|escapejs }}";
+    var locationQuery = "{{ location|escapejs }}";
+    var query = locationQuery || searchQuery;
+
+    if (markers.length > 0) {
+        // If we have properties, fit the map to show them
+        var group = new L.featureGroup(markers);
+        map.fitBounds(group.getBounds().pad(0.1));
+    } else if (query && query.trim() !== '') {
+        // If no properties found but there's a search query, geocode the location
+        geocodeLocation(query, true);  // true = show "no properties" message
+    }
+
+    // If there's a location search but we do have properties, still try to improve centering
+    if (locationQuery && locationQuery.trim() !== '' && markers.length > 0) {
+        geocodeLocation(locationQuery, false);  // false = don't show "no properties" message
+    }
+
+    // Function to geocode location using Nominatim (OpenStreetMap's free geocoding service)
+    function geocodeLocation(query, showNoPropertiesMessage) {
+        // Add "Australia" to improve accuracy for Australian locations
+        var searchTerm = query + ', Australia';
+        var geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchTerm)}&limit=1&countrycodes=au`;
+
+        fetch(geocodeUrl)
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    var result = data[0];
+                    var lat = parseFloat(result.lat);
+                    var lon = parseFloat(result.lon);
+
+                    // Center map on found location
+                    map.setView([lat, lon], 12);
+
+                    // Add a temporary marker to show the searched location (only if no properties message should be shown)
+                    if (showNoPropertiesMessage) {
+                        var searchMarker = L.marker([lat, lon], {
+                            icon: L.divIcon({
+                                className: 'search-location-marker',
+                                html: '<div style="background-color: #dc3545; color: white; width: 25px; height: 25px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); font-size: 12px;"><i class="bi bi-search"></i></div>',
+                                iconSize: [25, 25],
+                                iconAnchor: [12, 12]
+                            })
+                        }).addTo(map);
+
+                        searchMarker.bindPopup(`
+                            <div class="text-center">
+                                <strong>Searched Location</strong><br>
+                                <small>${result.display_name}</small><br>
+                                <small class="text-muted">No properties found in this area</small>
+                            </div>
+                        `).openPopup();
+                    }
+                }
+            })
+            .catch(error => {
+                console.log('Geocoding failed:', error);
+            });
+    }
+
+    // Add live search functionality
+    var searchInput = document.querySelector('input[name="search"]');
+    var locationInput = document.querySelector('input[name="location"]');
+
+    // Function to highlight matching properties on map
+    function highlightMatchingProperties(searchTerm) {
+        if (searchTerm.length < 2) return;
+
+        var found = false;
+        properties.forEach(function(property, index) {
+            var matches = property.title.toLowerCase().includes(searchTerm) ||
+                         property.address.toLowerCase().includes(searchTerm);
+
+            if (matches && markers[index]) {
+                markers[index].openPopup();
+                found = true;
+            }
+        });
+
+        return found;
+    }
+
+    // Add event listeners for search inputs
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            var searchTerm = this.value.toLowerCase();
+            highlightMatchingProperties(searchTerm);
+        });
+    }
+
+    if (locationInput) {
+        locationInput.addEventListener('input', function() {
+            var searchTerm = this.value.toLowerCase();
+            highlightMatchingProperties(searchTerm);
+        });
+    }
+});
+</script>
+{% endblock %}

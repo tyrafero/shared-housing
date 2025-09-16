@@ -1,0 +1,345 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard - SharedHousing{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Welcome Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-dark text-white">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="mb-2">Admin Dashboard</h2>
+                            <p class="mb-0 lead">System overview and management</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <i class="bi bi-gear-fill" style="font-size: 4rem; opacity: 0.3;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-2 col-sm-4 col-6 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-people display-4 mb-2"></i>
+                    <h4>{{ total_users }}</h4>
+                    <p class="mb-0 small">Total Users</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-4 col-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-person display-4 mb-2"></i>
+                    <h4>{{ total_renters }}</h4>
+                    <p class="mb-0 small">Renters</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-4 col-6 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-building display-4 mb-2"></i>
+                    <h4>{{ total_landlords }}</h4>
+                    <p class="mb-0 small">Landlords</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-4 col-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-house-door display-4 mb-2"></i>
+                    <h4>{{ total_properties }}</h4>
+                    <p class="mb-0 small">Properties</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-4 col-6 mb-3">
+            <div class="card bg-secondary text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-collection display-4 mb-2"></i>
+                    <h4>{{ total_groups }}</h4>
+                    <p class="mb-0 small">Groups</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-4 col-6 mb-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-chat-dots display-4 mb-2"></i>
+                    <h4>{{ recent_conversations|length }}</h4>
+                    <p class="mb-0 small">Conversations</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Weekly Activity -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Weekly Activity</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="text-center">
+                                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2"
+                                     style="width: 60px; height: 60px;">
+                                    <i class="bi bi-person-plus-fill"></i>
+                                </div>
+                                <h4 class="mb-1">{{ weekly_stats.new_users }}</h4>
+                                <p class="mb-0 small text-muted">New Users</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="text-center">
+                                <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2"
+                                     style="width: 60px; height: 60px;">
+                                    <i class="bi bi-house-add-fill"></i>
+                                </div>
+                                <h4 class="mb-1">{{ weekly_stats.new_properties }}</h4>
+                                <p class="mb-0 small text-muted">New Properties</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="text-center">
+                                <div class="bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2"
+                                     style="width: 60px; height: 60px;">
+                                    <i class="bi bi-chat-plus-fill"></i>
+                                </div>
+                                <h4 class="mb-1">{{ weekly_stats.new_conversations }}</h4>
+                                <p class="mb-0 small text-muted">New Conversations</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="text-center">
+                                <div class="bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2"
+                                     style="width: 60px; height: 60px;">
+                                    <i class="bi bi-collection-fill"></i>
+                                </div>
+                                <h4 class="mb-1">{{ weekly_stats.new_groups }}</h4>
+                                <p class="mb-0 small text-muted">New Groups</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Users -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-people me-2"></i>Recent Users</h5>
+                    <a href="/admin/accounts/customuser/" target="_blank" class="btn btn-sm btn-outline-primary">Manage Users</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_users %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Joined</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in recent_users %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2"
+                                                     style="width: 30px; height: 30px;">
+                                                    <span class="text-white small">{{ user.get_short_name.0|upper }}</span>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-medium">{{ user.get_short_name }}</div>
+                                                    <small class="text-muted">{{ user.email }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{% if user.user_type == 'renter' %}primary{% elif user.user_type == 'landlord' %}success{% else %}dark{% endif %}">
+                                                {{ user.get_user_type_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <small>{{ user.date_joined|date:"M d, Y" }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{% if user.is_active %}success{% else %}secondary{% endif %}">
+                                                {% if user.is_active %}Active{% else %}Inactive{% endif %}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-3">
+                            <i class="bi bi-people" style="font-size: 2rem; opacity: 0.3;"></i>
+                            <p class="mb-0 mt-2">No users found</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Properties -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-house-door me-2"></i>Recent Properties</h5>
+                    <a href="/admin/properties/property/" target="_blank" class="btn btn-sm btn-outline-primary">Manage Properties</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_properties %}
+                        {% for property in recent_properties %}
+                            <div class="d-flex align-items-center mb-3 {% if not forloop.last %}border-bottom pb-3{% endif %}">
+                                <div class="bg-warning rounded-circle d-flex align-items-center justify-content-center me-3"
+                                     style="width: 40px; height: 40px;">
+                                    <i class="bi bi-house-door text-white"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ property.title }}</h6>
+                                    <p class="mb-0 small text-muted">
+                                        <i class="bi bi-geo-alt me-1"></i>{{ property.location }} •
+                                        by {{ property.added_by.get_short_name }}
+                                    </p>
+                                    <small class="text-muted">${{ property.price_per_week }}/week</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-{% if property.rooms_available > 0 %}success{% else %}secondary{% endif %}">
+                                        {{ property.rooms_available }} rooms
+                                    </span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-3">
+                            <i class="bi bi-house-door" style="font-size: 2rem; opacity: 0.3;"></i>
+                            <p class="mb-0 mt-2">No properties found</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-chat-dots me-2"></i>Recent Conversations</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_conversations %}
+                        {% for conversation in recent_conversations %}
+                            <div class="d-flex align-items-center mb-3 {% if not forloop.last %}border-bottom pb-3{% endif %}">
+                                <div class="bg-danger rounded-circle d-flex align-items-center justify-content-center me-3"
+                                     style="width: 40px; height: 40px;">
+                                    <i class="bi bi-chat-dots text-white"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ conversation.title|default:"Direct Message" }}</h6>
+                                    <p class="mb-0 small text-muted">
+                                        {{ conversation.get_conversation_type_display }} •
+                                        {{ conversation.participants.count }} participants
+                                    </p>
+                                    <small class="text-muted">{{ conversation.created_at|timesince }} ago</small>
+                                </div>
+                                <div>
+                                    <span class="badge bg-{% if conversation.is_active %}success{% else %}secondary{% endif %}">
+                                        {% if conversation.is_active %}Active{% else %}Inactive{% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-3">
+                            <i class="bi bi-chat-dots" style="font-size: 2rem; opacity: 0.3;"></i>
+                            <p class="mb-0 mt-2">No conversations found</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-collection me-2"></i>Recent Groups</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_groups %}
+                        {% for group in recent_groups %}
+                            <div class="d-flex align-items-center mb-3 {% if not forloop.last %}border-bottom pb-3{% endif %}">
+                                <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-3"
+                                     style="width: 40px; height: 40px;">
+                                    <i class="bi bi-collection text-white"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ group.name }}</h6>
+                                    <p class="mb-0 small text-muted">
+                                        {{ group.get_status_display }}
+                                    </p>
+                                    <small class="text-muted">{{ group.created_at|timesince }} ago</small>
+                                </div>
+                                <div>
+                                    <span class="badge bg-primary">{{ group.current_member_count }} members</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-3">
+                            <i class="bi bi-collection" style="font-size: 2rem; opacity: 0.3;"></i>
+                            <p class="mb-0 mt-2">No groups found</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-dark text-white">
+                <div class="card-body text-center">
+                    <h5 class="mb-3">Admin Actions</h5>
+                    <div class="d-flex justify-content-center gap-3 flex-wrap">
+                        <a href="/admin/" target="_blank" class="btn btn-light">
+                            <i class="bi bi-gear me-2"></i>Django Admin
+                        </a>
+                        <a href="/admin/accounts/customuser/" target="_blank" class="btn btn-primary">
+                            <i class="bi bi-people me-2"></i>Manage Users
+                        </a>
+                        <a href="/admin/properties/property/" target="_blank" class="btn btn-success">
+                            <i class="bi bi-house-door me-2"></i>Manage Properties
+                        </a>
+                        <a href="/admin/messaging/conversation/" target="_blank" class="btn btn-info">
+                            <i class="bi bi-chat-dots me-2"></i>View Conversations
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

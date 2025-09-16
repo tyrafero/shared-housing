@@ -11,7 +11,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.conf import settings
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from .forms import CustomUserCreationForm, CustomAuthenticationForm, EmailVerificationForm
+from .forms import CustomUserCreationForm, CustomAuthenticationForm, EmailVerificationForm, LandlordRegistrationForm
 from .models import CustomUser
 from .tokens import account_activation_token
 
@@ -48,8 +48,8 @@ def custom_login(request):
             if user is not None:
                 login(request, user)
 
-                # Redirect based on profile completion
-                if not user.profile_completed:
+                # Redirect based on profile completion (only renters need detailed profile)
+                if not user.profile_completed and user.is_renter:
                     return redirect('profiles:setup')
 
                 # Check if user has a next parameter
@@ -82,7 +82,7 @@ def verify_email(request, uidb64, token):
         login(request, user)
         messages.success(request, 'Your email has been verified successfully!')
 
-        if not user.profile_completed:
+        if not user.profile_completed and user.is_renter:
             return redirect('profiles:setup')
         return redirect('core:dashboard')
     else:
@@ -133,9 +133,39 @@ def send_verification_email(request, user):
     )
 
 
+def landlord_register(request):
+    """Separate registration process for landlords"""
+    if request.method == 'POST':
+        form = LandlordRegistrationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.is_active = True  # User can login but needs email verification
+            user.profile_completed = True  # Landlords don't need detailed profile setup
+            user.save()
+
+            # Send verification email
+            send_verification_email(request, user)
+
+            messages.success(
+                request,
+                'Landlord registration successful! Please check your email to verify your account. '
+                'You will need to complete identity verification before listing properties.'
+            )
+            return redirect('accounts:login')
+    else:
+        form = LandlordRegistrationForm()
+
+    return render(request, 'accounts/landlord_register.html', {'form': form})
+
+
+def registration_choice(request):
+    """Landing page to choose between renter and landlord registration"""
+    return render(request, 'accounts/registration_choice.html')
+
+
 @login_required
 def profile_redirect(request):
     """Redirect users based on their profile completion status"""
-    if not request.user.profile_completed:
+    if not request.user.profile_completed and request.user.is_renter:
         return redirect('profiles:setup')
     return redirect('core:dashboard')

@@ -26,11 +26,11 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     # User type
     USER_TYPES = (
-        ('seeker', 'Room Seeker'),
-        ('lister', 'Room Lister'),
-        ('both', 'Both'),
+        ('renter', 'Renter'),
+        ('landlord', 'Landlord'),
+        ('admin', 'Administrator'),
     )
-    user_type = models.CharField(max_length=10, choices=USER_TYPES, default='seeker')
+    user_type = models.CharField(max_length=10, choices=USER_TYPES, default='renter')
 
     # Terms and privacy
     terms_accepted = models.BooleanField(default=False)
@@ -59,3 +59,21 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     @property
     def is_verified(self):
         return self.email_verified
+
+    @property
+    def is_admin(self):
+        return self.user_type == 'admin' or self.is_staff
+
+    @property
+    def is_landlord(self):
+        return self.user_type == 'landlord'
+
+    @property
+    def is_renter(self):
+        return self.user_type == 'renter'
+
+    def can_list_properties(self):
+        return self.is_landlord or self.is_admin
+
+    def can_access_admin(self):
+        return self.is_admin

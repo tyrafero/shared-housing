@@ -34,18 +34,44 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'core:dashboard' %}">Dashboard</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'properties:list' %}">Properties</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'matching:find_roommates' %}">Find Roommates</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'groups:group_list' %}">Groups</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'messaging:conversations_list' %}">Messages</a>
-                        </li>
+
+                        {% if user.is_admin %}
+                            <!-- Admin Navigation -->
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'properties:list' %}">All Properties</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'messaging:conversations_list' %}">All Messages</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/admin/" target="_blank">Admin Panel</a>
+                            </li>
+                        {% elif user.is_landlord %}
+                            <!-- Landlord Navigation -->
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'properties:list' %}">Properties</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'properties:add' %}">Add Property</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'messaging:conversations_list' %}">Messages</a>
+                            </li>
+                        {% else %}
+                            <!-- Renter Navigation -->
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'properties:list' %}">Properties</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'matching:find_roommates' %}">Find Roommates</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'groups:group_list' %}">Groups</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'messaging:conversations_list' %}">Messages</a>
+                            </li>
+                        {% endif %}
                     {% endif %}
                 </ul>
 
@@ -68,7 +94,7 @@
                             <a class="nav-link" href="{% url 'accounts:login' %}">Login</a>
                         </li>
                         <li class="nav-item">
-                            <a class="btn btn-primary ms-2" href="{% url 'accounts:register' %}">Sign Up</a>
+                            <a class="btn btn-primary ms-2" href="{% url 'accounts:registration_choice' %}">Sign Up</a>
                         </li>
                     {% endif %}
                 </ul>

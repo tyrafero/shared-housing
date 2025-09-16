@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Landlord Registration - SharedHousing{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <div class="bg-success rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                     style="width: 80px; height: 80px;">
+                    <i class="bi bi-building text-white" style="font-size: 2.5rem;"></i>
+                </div>
+                <h1 class="display-6 fw-bold">Landlord Registration</h1>
+                <p class="lead text-muted">Join our community of trusted property owners</p>
+            </div>
+
+
+            <!-- Registration Form -->
+            <div class="card shadow">
+                <div class="card-body p-4">
+                    <form method="post" id="landlord-registration-form">
+                        {% csrf_token %}
+
+                        <!-- Personal Information -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-person-circle me-2"></i>Personal Information
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.first_name.id_for_label }}" class="form-label">First Name</label>
+                                    {{ form.first_name }}
+                                    {% if form.first_name.errors %}
+                                        <div class="text-danger small">{{ form.first_name.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.last_name.id_for_label }}" class="form-label">Last Name</label>
+                                    {{ form.last_name }}
+                                    {% if form.last_name.errors %}
+                                        <div class="text-danger small">{{ form.last_name.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.email.id_for_label }}" class="form-label">Email Address</label>
+                                    {{ form.email }}
+                                    {% if form.email.errors %}
+                                        <div class="text-danger small">{{ form.email.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.phone_number.id_for_label }}" class="form-label">Phone Number</label>
+                                    {{ form.phone_number }}
+                                    {% if form.phone_number.errors %}
+                                        <div class="text-danger small">{{ form.phone_number.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Business Information -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-briefcase me-2"></i>Business Information
+                                <small class="text-muted">(Optional)</small>
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.business_name.id_for_label }}" class="form-label">Business Name</label>
+                                    {{ form.business_name }}
+                                    {% if form.business_name.errors %}
+                                        <div class="text-danger small">{{ form.business_name.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.abn_number.id_for_label }}" class="form-label">ABN Number</label>
+                                    {{ form.abn_number }}
+                                    {% if form.abn_number.help_text %}
+                                        <div class="form-text">{{ form.abn_number.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.abn_number.errors %}
+                                        <div class="text-danger small">{{ form.abn_number.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Property Service Areas -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-geo-alt me-2"></i>Property Locations
+                            </h5>
+                            <div class="mb-3">
+                                <label for="{{ form.primary_service_areas.id_for_label }}" class="form-label">Primary Service Areas</label>
+                                {{ form.primary_service_areas }}
+                                {% if form.primary_service_areas.help_text %}
+                                    <div class="form-text">{{ form.primary_service_areas.help_text }}</div>
+                                {% endif %}
+                                {% if form.primary_service_areas.errors %}
+                                    <div class="text-danger small">{{ form.primary_service_areas.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Security -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-shield-lock me-2"></i>Account Security
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.password1.id_for_label }}" class="form-label">Password</label>
+                                    {{ form.password1 }}
+                                    {% if form.password1.errors %}
+                                        <div class="text-danger small">{{ form.password1.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.password2.id_for_label }}" class="form-label">Confirm Password</label>
+                                    {{ form.password2 }}
+                                    {% if form.password2.errors %}
+                                        <div class="text-danger small">{{ form.password2.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Terms and Conditions -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-file-text me-2"></i>Terms and Agreements
+                            </h5>
+
+                            <div class="form-check mb-3">
+                                {{ form.terms_accepted }}
+                                <label class="form-check-label" for="{{ form.terms_accepted.id_for_label }}">
+                                    I agree to the <a href="{% url 'core:terms' %}" target="_blank">Terms of Service</a>
+                                </label>
+                                {% if form.terms_accepted.errors %}
+                                    <div class="text-danger small">{{ form.terms_accepted.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-check mb-3">
+                                {{ form.privacy_accepted }}
+                                <label class="form-check-label" for="{{ form.privacy_accepted.id_for_label }}">
+                                    I agree to the <a href="{% url 'core:privacy' %}" target="_blank">Privacy Policy</a>
+                                </label>
+                                {% if form.privacy_accepted.errors %}
+                                    <div class="text-danger small">{{ form.privacy_accepted.errors }}</div>
+                                {% endif %}
+                            </div>
+
+
+                            <div class="form-check mb-3">
+                                {{ form.marketing_consent }}
+                                <label class="form-check-label" for="{{ form.marketing_consent.id_for_label }}">
+                                    I would like to receive marketing communications and property tips (optional)
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-person-plus me-2"></i>Create Landlord Account
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Next Steps Info -->
+            <div class="card bg-light border-0 mt-4">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-info-circle me-2"></i>What happens next?
+                    </h6>
+                    <ol class="card-text small mb-0">
+                        <li>Verify your email address</li>
+                        <li>Complete your landlord profile setup</li>
+                        <li>Identity verification (for security and trust)</li>
+                        <li>Start listing your properties immediately</li>
+                    </ol>
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            <i class="bi bi-clock me-1"></i>
+                            The entire process takes about 5-10 minutes
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Login Link -->
+            <div class="text-center mt-4">
+                <p class="text-muted">
+                    Already have an account?
+                    <a href="{% url 'accounts:login' %}" class="text-decoration-none">Sign in here</a>
+                </p>
+                <p class="text-muted">
+                    Looking to rent instead?
+                    <a href="{% url 'accounts:register' %}" class="text-decoration-none">Register as a renter</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

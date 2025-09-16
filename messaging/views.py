@@ -194,10 +194,16 @@ def start_conversation(request):
             pass
 
     # Get potential participants (users with complete profiles)
+    # Exclude admin users from regular user conversations
     potential_participants = User.objects.filter(
         profile_completed=True,
-        is_active=True
-    ).exclude(id=request.user.id).select_related('profile')[:20]
+        is_active=True,
+        user_type__in=['renter', 'landlord']  # Only show renters and landlords
+    ).exclude(
+        id=request.user.id
+    ).exclude(
+        user_type='admin'  # Hide admin users
+    ).select_related('profile')[:20]
 
     context = {
         'potential_participants': potential_participants,
@@ -426,8 +432,13 @@ def user_search(request):
     users = User.objects.filter(
         Q(first_name__icontains=query) | Q(last_name__icontains=query) | Q(email__icontains=query),
         is_active=True,
-        profile_completed=True
-    ).exclude(id=request.user.id)[:10]
+        profile_completed=True,
+        user_type__in=['renter', 'landlord']  # Only show renters and landlords
+    ).exclude(
+        id=request.user.id
+    ).exclude(
+        user_type='admin'  # Hide admin users
+    )[:10]
 
     users_data = []
     for user in users:

@@ -1,0 +1,296 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ property.title }} - SharedHousing{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Property Header -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h1 class="h2 mb-2">{{ property.title }}</h1>
+                            <p class="text-muted mb-2">
+                                <i class="bi bi-geo-alt me-1"></i>
+                                {{ property.address }}, {{ property.suburb }}, {{ property.state }} {{ property.postcode }}
+                            </p>
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="badge bg-primary">{{ property.get_property_type_display }}</span>
+                                <span class="text-muted small">
+                                    <i class="bi bi-calendar-plus me-1"></i>
+                                    Available from {{ property.available_from|date:"M d, Y" }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="h3 text-success mb-1">${{ property.rent_per_week }}/week</div>
+                            {% if property.bond_amount %}
+                                <small class="text-muted">Bond: ${{ property.bond_amount }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Property Stats -->
+                    <div class="row g-3">
+                        <div class="col-auto">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-house-door text-muted me-2"></i>
+                                <span>{{ property.bedrooms }} bed{{ property.bedrooms|pluralize }}</span>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-droplet text-muted me-2"></i>
+                                <span>{{ property.bathrooms }} bath{{ property.bathrooms|pluralize }}</span>
+                            </div>
+                        </div>
+                        {% if property.car_spaces %}
+                        <div class="col-auto">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-car-front text-muted me-2"></i>
+                                <span>{{ property.car_spaces }} parking</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="col-auto">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-people text-muted me-2"></i>
+                                <span>{{ property.rooms_available }} room{{ property.rooms_available|pluralize }} available</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Property Images -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-images me-2"></i>Photos
+                    </h5>
+                    {% if property.images.all %}
+                        <div class="row g-2">
+                            {% for image in property.images.all %}
+                                {% if image.image_src %}
+                                <div class="col-md-6 col-lg-4">
+                                    <img src="{{ image.image_src }}" class="img-fluid rounded" alt="Property image" style="height: 200px; object-fit: cover;">
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-camera display-4 mb-2"></i>
+                            <p>No photos available yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Property Description -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-file-text me-2"></i>Description
+                    </h5>
+                    <p class="mb-0">{{ property.description|linebreaks }}</p>
+                </div>
+            </div>
+
+            <!-- Property Features -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-star me-2"></i>Features & Amenities
+                    </h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <h6>Property Features</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>{{ property.get_furnished_display }}</li>
+                                {% if property.pets_allowed %}
+                                    <li><i class="bi bi-check-circle-fill text-success me-2"></i>Pets Allowed</li>
+                                {% else %}
+                                    <li><i class="bi bi-x-circle-fill text-danger me-2"></i>No Pets</li>
+                                {% endif %}
+                                {% if property.smoking_allowed %}
+                                    <li><i class="bi bi-check-circle-fill text-success me-2"></i>Smoking Allowed</li>
+                                {% else %}
+                                    <li><i class="bi bi-x-circle-fill text-danger me-2"></i>No Smoking</li>
+                                {% endif %}
+                                {% if property.internet_included %}
+                                    <li><i class="bi bi-check-circle-fill text-success me-2"></i>Internet Included</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Lease Information</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="bi bi-calendar-check text-muted me-2"></i>Minimum {{ property.min_lease_term }} month{{ property.min_lease_term|pluralize }} lease</li>
+                                {% if property.max_lease_term %}
+                                    <li><i class="bi bi-calendar-x text-muted me-2"></i>Maximum {{ property.max_lease_term }} month{{ property.max_lease_term|pluralize }} lease</li>
+                                {% endif %}
+                                <li><i class="bi bi-people text-muted me-2"></i>Max {{ property.max_occupants }} occupant{{ property.max_occupants|pluralize }}</li>
+                                {% if property.current_occupants %}
+                                    <li><i class="bi bi-person-check text-muted me-2"></i>{{ property.current_occupants }} current occupant{{ property.current_occupants|pluralize }}</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Available Rooms -->
+            {% if available_rooms %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-door-open me-2"></i>Available Rooms
+                    </h5>
+                    <div class="row g-3">
+                        {% for room in available_rooms %}
+                        <div class="col-md-6">
+                            <div class="card border">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ room.room_type|title }} Room</h6>
+                                    <p class="text-success mb-2"><strong>${{ room.rent_per_week }}/week</strong></p>
+                                    {% if room.description %}
+                                        <p class="card-text small">{{ room.description }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Contact Information -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-person-badge me-2"></i>Contact Information
+                    </h5>
+                    {% if property.contact_person %}
+                        <p class="mb-2">
+                            <strong>{{ property.contact_person }}</strong>
+                            {% if property.agency %}
+                                <br><small class="text-muted">{{ property.agency }}</small>
+                            {% endif %}
+                        </p>
+                    {% endif %}
+
+                    {% if user.is_authenticated and not user.is_landlord and property.added_by != user %}
+                        <!-- Contact Actions for Renters -->
+                        <div class="d-grid gap-2">
+                            {% if not has_inquired %}
+                                <a href="{% url 'properties:inquiry' property.pk %}" class="btn btn-primary">
+                                    <i class="bi bi-envelope me-2"></i>Send Inquiry
+                                </a>
+                            {% else %}
+                                <button class="btn btn-outline-success" disabled>
+                                    <i class="bi bi-check-circle me-2"></i>Inquiry Sent
+                                </button>
+                            {% endif %}
+                            <a href="{% url 'properties:save' property.pk %}" class="btn btn-outline-primary">
+                                <i class="bi bi-heart me-2"></i>Save Property
+                            </a>
+                        </div>
+                    {% elif user.is_authenticated and property.added_by == user %}
+                        <!-- Property Owner Actions -->
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'properties:edit' property.pk %}" class="btn btn-success">
+                                <i class="bi bi-pencil me-2"></i>Edit Property
+                            </a>
+                            <a href="{% url 'properties:analytics' property.pk %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-graph-up me-2"></i>View Analytics
+                            </a>
+                        </div>
+                    {% else %}
+                        <!-- Not logged in -->
+                        <div class="alert alert-info">
+                            <small>
+                                <a href="{% url 'accounts:login' %}">Login</a> to contact the property owner
+                            </small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Property Stats -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-info-circle me-2"></i>Property Details
+                    </h6>
+                    <div class="small">
+                        <div class="d-flex justify-content-between py-1">
+                            <span>Property Type:</span>
+                            <span>{{ property.get_property_type_display }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between py-1">
+                            <span>Available From:</span>
+                            <span>{{ property.available_from|date:"M d, Y" }}</span>
+                        </div>
+                        {% if property.available_until %}
+                        <div class="d-flex justify-content-between py-1">
+                            <span>Available Until:</span>
+                            <span>{{ property.available_until|date:"M d, Y" }}</span>
+                        </div>
+                        {% endif %}
+                        <div class="d-flex justify-content-between py-1">
+                            <span>Min Lease:</span>
+                            <span>{{ property.min_lease_term }} month{{ property.min_lease_term|pluralize }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between py-1">
+                            <span>Listed:</span>
+                            <span>{{ property.date_listed|timesince }} ago</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Similar Properties -->
+            {% if similar_properties %}
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-houses me-2"></i>Similar Properties
+                    </h6>
+                    {% for similar in similar_properties %}
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                            {% if similar.images.first and similar.images.first.image_src %}
+                                <img src="{{ similar.images.first.image_src }}" class="rounded" style="width: 60px; height: 60px; object-fit: cover;">
+                            {% else %}
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                    <i class="bi bi-house text-muted"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-1">
+                                <a href="{% url 'properties:detail' similar.pk %}" class="text-decoration-none">
+                                    {{ similar.title|truncatechars:50 }}
+                                </a>
+                            </h6>
+                            <small class="text-muted">{{ similar.suburb }}</small>
+                            <div class="text-success small"><strong>${{ similar.rent_per_week }}/week</strong></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }} - SharedHousing{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="mb-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center me-3"
+                         style="width: 50px; height: 50px;">
+                        <i class="bi bi-pencil text-white" style="font-size: 1.5rem;"></i>
+                    </div>
+                    <div>
+                        <h1 class="h2 mb-0">{{ title }}</h1>
+                        <p class="text-muted mb-0">Update your property listing details</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Property Form -->
+            <div class="card shadow">
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <!-- Basic Information -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-info-circle me-2"></i>Basic Information
+                            </h5>
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <label for="{{ form.title.id_for_label }}" class="form-label">{{ form.title.label }}</label>
+                                    {{ form.title }}
+                                    {% if form.title.errors %}
+                                        <div class="text-danger small">{{ form.title.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                    <div class="text-danger small">{{ form.description.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.property_type.id_for_label }}" class="form-label">{{ form.property_type.label }}</label>
+                                    {{ form.property_type }}
+                                    {% if form.property_type.errors %}
+                                        <div class="text-danger small">{{ form.property_type.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Location Details -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-geo-alt me-2"></i>Location Details
+                            </h5>
+                            <div class="mb-3">
+                                <label for="{{ form.address.id_for_label }}" class="form-label">{{ form.address.label }}</label>
+                                {{ form.address }}
+                                {% if form.address.errors %}
+                                    <div class="text-danger small">{{ form.address.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="{{ form.suburb.id_for_label }}" class="form-label">{{ form.suburb.label }}</label>
+                                    {{ form.suburb }}
+                                    {% if form.suburb.errors %}
+                                        <div class="text-danger small">{{ form.suburb.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="{{ form.state.id_for_label }}" class="form-label">{{ form.state.label }}</label>
+                                    {{ form.state }}
+                                    {% if form.state.errors %}
+                                        <div class="text-danger small">{{ form.state.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="{{ form.postcode.id_for_label }}" class="form-label">{{ form.postcode.label }}</label>
+                                    {{ form.postcode }}
+                                    {% if form.postcode.errors %}
+                                        <div class="text-danger small">{{ form.postcode.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Property Specifications -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-house me-2"></i>Property Specifications
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="{{ form.bedrooms.id_for_label }}" class="form-label">{{ form.bedrooms.label }}</label>
+                                    {{ form.bedrooms }}
+                                    {% if form.bedrooms.errors %}
+                                        <div class="text-danger small">{{ form.bedrooms.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="{{ form.bathrooms.id_for_label }}" class="form-label">{{ form.bathrooms.label }}</label>
+                                    {{ form.bathrooms }}
+                                    {% if form.bathrooms.errors %}
+                                        <div class="text-danger small">{{ form.bathrooms.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="{{ form.car_spaces.id_for_label }}" class="form-label">{{ form.car_spaces.label }}</label>
+                                    {{ form.car_spaces }}
+                                    {% if form.car_spaces.errors %}
+                                        <div class="text-danger small">{{ form.car_spaces.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Financial Information -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-currency-dollar me-2"></i>Financial Information
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.rent_per_week.id_for_label }}" class="form-label">{{ form.rent_per_week.label }}</label>
+                                    {{ form.rent_per_week }}
+                                    {% if form.rent_per_week.errors %}
+                                        <div class="text-danger small">{{ form.rent_per_week.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.bond_amount.id_for_label }}" class="form-label">{{ form.bond_amount.label }}</label>
+                                    {{ form.bond_amount }}
+                                    {% if form.bond_amount.errors %}
+                                        <div class="text-danger small">{{ form.bond_amount.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Availability & Terms -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-calendar me-2"></i>Availability & Terms
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.available_from.id_for_label }}" class="form-label">{{ form.available_from.label }}</label>
+                                    {{ form.available_from }}
+                                    {% if form.available_from.errors %}
+                                        <div class="text-danger small">{{ form.available_from.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.min_lease_term.id_for_label }}" class="form-label">{{ form.min_lease_term.label }}</label>
+                                    {{ form.min_lease_term }}
+                                    {% if form.min_lease_term.errors %}
+                                        <div class="text-danger small">{{ form.min_lease_term.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Property Features -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-house-gear me-2"></i>Property Features
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.furnished.id_for_label }}" class="form-label">{{ form.furnished.label }}</label>
+                                    {{ form.furnished }}
+                                    {% if form.furnished.errors %}
+                                        <div class="text-danger small">{{ form.furnished.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="form-check">
+                                        {{ form.pets_allowed }}
+                                        <label class="form-check-label" for="{{ form.pets_allowed.id_for_label }}">
+                                            {{ form.pets_allowed.label }}
+                                        </label>
+                                        {% if form.pets_allowed.errors %}
+                                            <div class="text-danger small">{{ form.pets_allowed.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="form-check">
+                                        {{ form.smoking_allowed }}
+                                        <label class="form-check-label" for="{{ form.smoking_allowed.id_for_label }}">
+                                            {{ form.smoking_allowed.label }}
+                                        </label>
+                                        {% if form.smoking_allowed.errors %}
+                                            <div class="text-danger small">{{ form.smoking_allowed.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Room Information -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-door-open me-2"></i>Room Information
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.rooms_available.id_for_label }}" class="form-label">{{ form.rooms_available.label }}</label>
+                                    {{ form.rooms_available }}
+                                    {% if form.rooms_available.errors %}
+                                        <div class="text-danger small">{{ form.rooms_available.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.max_occupants.id_for_label }}" class="form-label">{{ form.max_occupants.label }}</label>
+                                    {{ form.max_occupants }}
+                                    {% if form.max_occupants.errors %}
+                                        <div class="text-danger small">{{ form.max_occupants.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Property Photos -->
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-camera me-2"></i>Property Photos
+                            </h5>
+                            <p class="text-muted small mb-3">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Add up to 3 photo URLs. You can use image hosting services like Imgur, Google Drive, or any other image URL.
+                            </p>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="{{ form.image_url_1.id_for_label }}" class="form-label">{{ form.image_url_1.label }}</label>
+                                    {{ form.image_url_1 }}
+                                    {% if form.image_url_1.errors %}
+                                        <div class="text-danger small">{{ form.image_url_1.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="{{ form.image_url_2.id_for_label }}" class="form-label">{{ form.image_url_2.label }}</label>
+                                    {{ form.image_url_2 }}
+                                    {% if form.image_url_2.errors %}
+                                        <div class="text-danger small">{{ form.image_url_2.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="{{ form.image_url_3.id_for_label }}" class="form-label">{{ form.image_url_3.label }}</label>
+                                    {{ form.image_url_3 }}
+                                    {% if form.image_url_3.errors %}
+                                        <div class="text-danger small">{{ form.image_url_3.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-circle me-2"></i>Update Property
+                            </button>
+                            <a href="{% url 'properties:detail' property.pk %}" class="btn btn-outline-secondary btn-lg">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

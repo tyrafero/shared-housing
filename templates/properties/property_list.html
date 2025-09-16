@@ -115,8 +115,8 @@
             {% for property in page_obj %}
                 <div class="col-lg-4 col-md-6 mb-4">
                     <div class="card h-100 property-card">
-                        {% if property.featured_image %}
-                            <img src="{{ property.featured_image.url }}" class="card-img-top" alt="{{ property.title }}" style="height: 200px; object-fit: cover;">
+                        {% if property.images.first and property.images.first.image_src %}
+                            <img src="{{ property.images.first.image_src }}" class="card-img-top" alt="{{ property.title }}" style="height: 200px; object-fit: cover;">
                         {% else %}
                             <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
                                 <i class="bi bi-house text-muted fs-1"></i>

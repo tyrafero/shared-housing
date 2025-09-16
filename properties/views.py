@@ -11,6 +11,7 @@ from decimal import Decimal
 import json
 
 from .models import Property, PropertyImage, RoomListing, PropertySavedSearch
+from .forms import PropertyCreationForm
 from messaging.services import MessagingService
 
 User = get_user_model()
@@ -338,16 +339,15 @@ def search_suggestions(request):
     return JsonResponse({'suggestions': suggestions})
 
 
-@login_required
 def property_map(request):
-    """Show properties on a map"""
+    """Show properties on a map using OpenStreetMap"""
     # Get filtered properties based on search params
     properties = Property.objects.filter(
         is_active=True,
         rooms_available__gt=0,
         latitude__isnull=False,
         longitude__isnull=False
-    )
+    ).prefetch_related('images')  # Prefetch images for efficiency
 
     # Apply same filters as property_list
     search_query = request.GET.get('search', '').strip()
@@ -367,42 +367,40 @@ def property_map(request):
     min_price = request.GET.get('min_price')
     if min_price:
         try:
-            properties = properties.filter(weekly_rent__gte=Decimal(min_price))
+            properties = properties.filter(rent_per_week__gte=Decimal(min_price))
         except (ValueError, TypeError):
             pass
 
     max_price = request.GET.get('max_price')
     if max_price:
         try:
-            properties = properties.filter(weekly_rent__lte=Decimal(max_price))
+            properties = properties.filter(rent_per_week__lte=Decimal(max_price))
+        except (ValueError, TypeError):
+            pass
+
+    property_type = request.GET.get('property_type', '').strip()
+    if property_type:
+        properties = properties.filter(property_type=property_type)
+
+    bedrooms = request.GET.get('bedrooms', '').strip()
+    if bedrooms:
+        try:
+            properties = properties.filter(bedrooms__gte=int(bedrooms))
         except (ValueError, TypeError):
             pass
 
     # Limit to first 100 properties for performance
     properties = properties[:100]
 
-    # Prepare data for map
-    property_data = []
-    for prop in properties:
-        property_data.append({
-            'id': prop.id,
-            'title': prop.title,
-            'address': prop.address,
-            'suburb': prop.suburb,
-            'weekly_rent': str(prop.weekly_rent),
-            'bedrooms': prop.bedrooms,
-            'bathrooms': prop.bathrooms,
-            'property_type': prop.get_property_type_display(),
-            'latitude': float(prop.latitude),
-            'longitude': float(prop.longitude),
-            'url': f'/properties/{prop.id}/',
-            'image_url': prop.featured_image.url if prop.featured_image else None,
-        })
-
     context = {
-        'properties_json': json.dumps(property_data),
-        'total_count': len(property_data),
-        'search_params': request.GET.dict(),
+        'properties': properties,
+        'search_query': search_query,
+        'location': location,
+        'min_price': min_price,
+        'max_price': max_price,
+        'property_type': property_type,
+        'bedrooms': bedrooms,
+        'property_types': Property._meta.get_field('property_type').choices,
     }
 
     return render(request, 'properties/property_map.html', context)
@@ -500,13 +498,143 @@ def my_properties(request):
 
 @login_required
 def add_property(request):
-    """Add new property (placeholder)"""
-    messages.info(request, 'Property listing creation coming soon!')
-    return redirect('properties:list')
+    """Add new property listing for landlords"""
+
+    # Check if user is allowed to add properties
+    if not request.user.can_list_properties():
+        messages.error(request, 'You do not have permission to list properties.')
+        return redirect('properties:list')
+
+    if request.method == 'POST':
+        form = PropertyCreationForm(request.POST)
+        if form.is_valid():
+            property = form.save(commit=False)
+            property.added_by = request.user
+            property.contact_person = request.user.get_full_name()
+            property.contact_email = request.user.email
+            property.contact_phone = getattr(request.user, 'phone_number', '')
+            property.save()
+
+            # Handle image URLs
+            from .models import PropertyImage
+            image_urls = [
+                form.cleaned_data.get('image_url_1'),
+                form.cleaned_data.get('image_url_2'),
+                form.cleaned_data.get('image_url_3'),
+            ]
+
+            for i, url in enumerate(image_urls):
+                if url:
+                    PropertyImage.objects.create(
+                        property_listing=property,
+                        image_url=url,
+                        order=i,
+                        is_primary=(i == 0)  # First image is primary
+                    )
+
+            messages.success(request, 'Property listing created successfully!')
+            return redirect('properties:detail', pk=property.pk)
+    else:
+        form = PropertyCreationForm()
+
+    context = {
+        'form': form,
+        'title': 'Add New Property'
+    }
+    return render(request, 'properties/add_property.html', context)
 
 
 @login_required
 def edit_property(request, pk):
-    """Edit property (placeholder)"""
-    messages.info(request, 'Property editing coming soon!')
-    return redirect('properties:detail', pk=pk)
+    """Edit existing property listing"""
+    property_obj = get_object_or_404(Property, pk=pk, is_active=True)
+
+    # Check if user owns this property or is admin
+    if property_obj.added_by != request.user and not request.user.is_admin:
+        messages.error(request, 'You do not have permission to edit this property.')
+        return redirect('properties:detail', pk=pk)
+
+    if request.method == 'POST':
+        form = PropertyCreationForm(request.POST, instance=property_obj)
+        if form.is_valid():
+            property_obj = form.save()
+
+            # Handle image URLs - first delete existing images from URLs
+            from .models import PropertyImage
+            existing_images = PropertyImage.objects.filter(property_listing=property_obj, image_url__isnull=False)
+            existing_images.delete()
+
+            # Add new image URLs
+            image_urls = [
+                form.cleaned_data.get('image_url_1'),
+                form.cleaned_data.get('image_url_2'),
+                form.cleaned_data.get('image_url_3'),
+            ]
+
+            for i, url in enumerate(image_urls):
+                if url:
+                    PropertyImage.objects.create(
+                        property_listing=property_obj,
+                        image_url=url,
+                        order=i,
+                        is_primary=(i == 0 and not PropertyImage.objects.filter(property_listing=property_obj, is_primary=True).exists())
+                    )
+
+            messages.success(request, 'Property updated successfully!')
+            return redirect('properties:detail', pk=property_obj.pk)
+    else:
+        # Populate form with existing image URLs
+        form = PropertyCreationForm(instance=property_obj)
+        existing_images = property_obj.images.filter(image_url__isnull=False).order_by('order')
+        if existing_images.exists():
+            form.fields['image_url_1'].initial = existing_images[0].image_url if existing_images.count() > 0 else ''
+            form.fields['image_url_2'].initial = existing_images[1].image_url if existing_images.count() > 1 else ''
+            form.fields['image_url_3'].initial = existing_images[2].image_url if existing_images.count() > 2 else ''
+
+    context = {
+        'form': form,
+        'property': property_obj,
+        'title': f'Edit {property_obj.title}'
+    }
+    return render(request, 'properties/edit_property.html', context)
+
+
+@login_required
+def property_analytics(request, pk):
+    """Basic analytics view for property owners"""
+    property_obj = get_object_or_404(Property, pk=pk, is_active=True)
+
+    # Check if user owns this property or is admin
+    if property_obj.added_by != request.user and not request.user.is_admin:
+        messages.error(request, 'You do not have permission to view analytics for this property.')
+        return redirect('properties:detail', pk=pk)
+
+    # Basic analytics data
+    total_views = getattr(property_obj, 'view_count', 0)  # Placeholder - would need to implement view tracking
+
+    # Get inquiry count (if messaging system exists)
+    try:
+        from messaging.models import Conversation
+        total_inquiries = Conversation.objects.filter(
+            conversation_type='property_inquiry',
+            property_listing=property_obj
+        ).count()
+    except:
+        total_inquiries = 0
+
+    # Days since listing
+    from django.utils import timezone
+    days_listed = (timezone.now().date() - property_obj.date_listed).days if hasattr(property_obj, 'date_listed') else 0
+
+    # Calculate some basic metrics
+    avg_inquiries_per_day = total_inquiries / max(days_listed, 1) if days_listed > 0 else 0
+
+    context = {
+        'property': property_obj,
+        'total_views': total_views,
+        'total_inquiries': total_inquiries,
+        'days_listed': days_listed,
+        'avg_inquiries_per_day': round(avg_inquiries_per_day, 2),
+        'title': f'Analytics - {property_obj.title}'
+    }
+    return render(request, 'properties/property_analytics.html', context)

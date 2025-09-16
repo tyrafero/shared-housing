@@ -31,4 +31,5 @@ urlpatterns = [
     path('my-properties/', views.my_properties, name='my_properties'),
     path('add/', views.add_property, name='add'),
     path('<int:pk>/edit/', views.edit_property, name='edit'),
+    path('<int:pk>/analytics/', views.property_analytics, name='analytics'),
 ]
