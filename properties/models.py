@@ -387,3 +387,291 @@ class PropertySavedSearch(models.Model):
 
     def __str__(self):
         return f"{self.user.get_short_name()}'s search: {self.name}"
+
+
+class PropertyRequirements(models.Model):
+    """Property owner requirements and preferences for tenants"""
+    
+    property = models.OneToOneField(Property, on_delete=models.CASCADE, related_name='requirements')
+    
+    # Financial Requirements
+    minimum_combined_income = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True,
+        help_text="Minimum combined annual income required"
+    )
+    income_verification_required = models.BooleanField(default=True)
+    employment_verification_required = models.BooleanField(default=True)
+    
+    # Group Size Preferences
+    preferred_group_size = models.PositiveIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        help_text="Preferred number of tenants"
+    )
+    min_group_size = models.PositiveIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        default=1
+    )
+    max_group_size = models.PositiveIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(10)]
+    )
+    
+    # Tenant Preferences
+    preferred_age_min = models.PositiveIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(18), MaxValueValidator(99)]
+    )
+    preferred_age_max = models.PositiveIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(18), MaxValueValidator(99)]
+    )
+    preferred_occupations = models.JSONField(
+        default=list, 
+        help_text="List of preferred occupations"
+    )
+    
+    # Deal Breakers
+    no_pets = models.BooleanField(default=False)
+    no_smoking = models.BooleanField(default=True)
+    no_parties = models.BooleanField(default=False)
+    references_required = models.BooleanField(default=True)
+    
+    # Application Requirements
+    required_documents = models.JSONField(
+        default=list,
+        help_text="List of required documents for application"
+    )
+    application_fee = models.DecimalField(
+        max_digits=6, decimal_places=2, default=0,
+        help_text="Application fee amount"
+    )
+    
+    # Timeline
+    viewing_required = models.BooleanField(default=True)
+    group_viewing_preferred = models.BooleanField(default=True)
+    decision_timeline_days = models.PositiveIntegerField(
+        default=7,
+        help_text="Days to make decision after application"
+    )
+    
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'properties_propertyrequirements'
+        verbose_name = 'Property Requirements'
+        verbose_name_plural = 'Property Requirements'
+    
+    def __str__(self):
+        return f"Requirements for {self.property.title}"
+
+
+class PropertyInterest(models.Model):
+    """Track user interest in specific properties"""
+    
+    STATUS_CHOICES = [
+        ('interested', 'Interested'),
+        ('contacted', 'Contacted Property Owner'),
+        ('viewing_scheduled', 'Viewing Scheduled'),
+        ('applied', 'Applied'),
+        ('withdrawn', 'Withdrawn Interest'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='property_interests')
+    property_listing = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='interested_users')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='interested')
+    
+    # Interest Details
+    notes = models.TextField(blank=True, help_text="User's notes about this property")
+    budget_confirmed = models.BooleanField(default=False)
+    timeline_compatible = models.BooleanField(default=False)
+    
+    # Group Formation
+    open_to_group_formation = models.BooleanField(default=True)
+    preferred_group_size = models.PositiveIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(10)]
+    )
+    
+    # Compatibility Scores (calculated)
+    budget_compatibility_score = models.FloatField(default=0.0)
+    lifestyle_compatibility_score = models.FloatField(default=0.0)
+    overall_compatibility_score = models.FloatField(default=0.0)
+    
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'properties_propertyinterest'
+        unique_together = ['user', 'property_listing']
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['property_listing', 'status']),
+            models.Index(fields=['user', 'status']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.get_short_name()} interested in {self.property_listing.title}"
+    
+    @property
+    def can_form_group(self):
+        """Check if user can participate in group formation for this property"""
+        return (self.open_to_group_formation and 
+                self.status in ['interested', 'contacted'] and 
+                self.budget_confirmed)
+
+
+class PropertyGroup(models.Model):
+    """Property-specific groups forming to apply together"""
+    
+    STATUS_CHOICES = [
+        ('forming', 'Forming'),
+        ('ready', 'Ready to Apply'),
+        ('applied', 'Application Submitted'),
+        ('approved', 'Application Approved'),
+        ('rejected', 'Application Rejected'),
+        ('disbanded', 'Group Disbanded'),
+    ]
+    
+    property_listing = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='groups')
+    name = models.CharField(max_length=100, help_text="Group name")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='forming')
+    
+    # Group Members
+    members = models.ManyToManyField(User, through='PropertyGroupMembership', related_name='property_groups')
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_property_groups')
+    
+    # Group Details
+    target_size = models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(10)])
+    current_size = models.PositiveIntegerField(default=1)
+    max_size = models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(10)])
+    
+    # Financial Validation
+    combined_income_verified = models.BooleanField(default=False)
+    budget_meets_requirements = models.BooleanField(default=False)
+    
+    # Timeline Coordination
+    agreed_move_in_date = models.DateField(null=True, blank=True)
+    viewing_scheduled = models.DateTimeField(null=True, blank=True)
+    application_deadline = models.DateField(null=True, blank=True)
+    
+    # Group Preferences
+    group_bio = models.TextField(blank=True, help_text="Group description for property owner")
+    shared_interests = models.JSONField(default=list)
+    group_compatibility_score = models.FloatField(default=0.0)
+    
+    # Application Management
+    application_submitted_at = models.DateTimeField(null=True, blank=True)
+    application_documents_complete = models.BooleanField(default=False)
+    property_owner_response = models.TextField(blank=True)
+    
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'properties_propertygroup'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['property_listing', 'status']),
+            models.Index(fields=['status', 'current_size']),
+        ]
+    
+    def __str__(self):
+        return f"{self.name} ({self.current_size}/{self.target_size}) - {self.property_listing.title}"
+    
+    @property
+    def is_full(self):
+        return self.current_size >= self.target_size
+    
+    @property
+    def needs_members(self):
+        return self.target_size - self.current_size
+    
+    @property
+    def is_ready_to_apply(self):
+        return (self.current_size >= self.target_size and 
+                self.budget_meets_requirements and 
+                self.application_documents_complete)
+    
+    @property
+    def combined_budget_range(self):
+        """Calculate combined budget range of all group members"""
+        total_min = 0
+        total_max = 0
+        for membership in self.memberships.all():
+            if hasattr(membership.user, 'profile'):
+                profile = membership.user.profile
+                if profile.min_budget:
+                    total_min += float(profile.min_budget)
+                if profile.max_budget:
+                    total_max += float(profile.max_budget)
+        return total_min, total_max
+
+
+class PropertyGroupMembership(models.Model):
+    """Through model for PropertyGroup membership with additional details"""
+    
+    ROLE_CHOICES = [
+        ('creator', 'Group Creator'),
+        ('member', 'Member'),
+        ('pending', 'Pending Invitation'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    group = models.ForeignKey(PropertyGroup, on_delete=models.CASCADE, related_name='memberships')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='member')
+    
+    # Membership Details
+    joined_at = models.DateTimeField(default=timezone.now)
+    documents_uploaded = models.BooleanField(default=False)
+    income_verified = models.BooleanField(default=False)
+    ready_to_apply = models.BooleanField(default=False)
+    
+    # Preferences for this group
+    notes = models.TextField(blank=True)
+    can_be_primary_contact = models.BooleanField(default=False)
+    
+    class Meta:
+        db_table = 'properties_propertygroupmembership'
+        unique_together = ['user', 'group']
+        ordering = ['joined_at']
+    
+    def __str__(self):
+        return f"{self.user.get_short_name()} in {self.group.name}"
+
+
+class PropertyGroupInvitation(models.Model):
+    """Invitations to join property-specific groups"""
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('declined', 'Declined'),
+        ('expired', 'Expired'),
+    ]
+    
+    group = models.ForeignKey(PropertyGroup, on_delete=models.CASCADE, related_name='invitations')
+    invited_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='property_group_invitations')
+    invited_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_property_group_invitations')
+    
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    message = models.TextField(blank=True, help_text="Personal message with invitation")
+    
+    created_at = models.DateTimeField(default=timezone.now)
+    responded_at = models.DateTimeField(null=True, blank=True)
+    expires_at = models.DateTimeField()
+    
+    class Meta:
+        db_table = 'properties_propertygroupinvitation'
+        unique_together = ['group', 'invited_user']
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Invitation to {self.invited_user.get_short_name()} for {self.group.name}"
+    
+    @property
+    def is_expired(self):
+        return timezone.now() > self.expires_at
+    
+    @property
+    def is_pending(self):
+        return self.status == 'pending' and not self.is_expired

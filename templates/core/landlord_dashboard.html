@@ -86,7 +86,7 @@
                                                 <div>
                                                     <h6 class="card-title">{{ property.title }}</h6>
                                                     <p class="card-text text-muted small">
-                                                        <i class="bi bi-geo-alt me-1"></i>{{ property.location }}
+                                                        <i class="bi bi-geo-alt me-1"></i>{{ property.suburb }}, {{ property.state }}
                                                     </p>
                                                 </div>
                                                 <span class="badge bg-{% if property.rooms_available > 0 %}success{% else %}secondary{% endif %}">
@@ -98,7 +98,7 @@
                                                 </span>
                                             </div>
                                             <p class="card-text">
-                                                <strong>${{ property.price_per_week }}/week</strong> •
+                                                <strong>${{ property.rent_per_week }}/week</strong> •
                                                 {{ property.rooms_available }} room{{ property.rooms_available|pluralize }} available
                                             </p>
                                             <div class="d-flex gap-2">

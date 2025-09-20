@@ -255,6 +255,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let typingTimer = null;
     let isTyping = false;
     let pollInterval = null;
+    let isSubmitting = false;
 
     // Get the last message ID for polling
     const messageWrappers = messagesContainer.querySelectorAll('.message-wrapper');
@@ -320,21 +321,24 @@ document.addEventListener('DOMContentLoaded', function() {
     messageInput.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            if (this.value.trim()) {
-                messageForm.dispatchEvent(new Event('submit'));
+            if (this.value.trim() && !isSubmitting) {
+                // Trigger form submission
+                submitMessage();
             }
         }
     });
 
-    // Handle message form submission with AJAX
-    messageForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-
+    // Function to submit message
+    function submitMessage() {
+        if (isSubmitting) return;
+        
         const content = messageInput.value.trim();
         if (!content) return;
 
-        // Create FormData BEFORE disabling inputs
-        const formData = new FormData(this);
+        isSubmitting = true;
+
+        // Create FormData
+        const formData = new FormData(messageForm);
 
         // Show sending state
         sendBtn.disabled = true;
@@ -343,7 +347,7 @@ document.addEventListener('DOMContentLoaded', function() {
         hideTyping();
 
         // Send message via AJAX
-        fetch(this.action, {
+        fetch(messageForm.action, {
             method: 'POST',
             body: formData,
             headers: {
@@ -374,7 +378,14 @@ document.addEventListener('DOMContentLoaded', function() {
             sendBtn.disabled = false;
             sendBtn.innerHTML = '<i class="bi bi-send-fill"></i>';
             messageInput.focus();
+            isSubmitting = false;
         });
+    }
+
+    // Handle message form submission with AJAX
+    messageForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        submitMessage();
     });
 
     // Add message to UI
@@ -402,8 +413,9 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
 
             // Track this message to prevent duplicates
-            const uniqueId = messageData.content.trim() + '|' + messageData.created_at;
+            const uniqueId = messageData.content.trim() + '|' + messageCount;
             existingMessageIds.add(uniqueId);
+            messageCount++;
 
         } else {
             // For received messages
@@ -429,6 +441,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         messagesContainer.appendChild(messageDiv);
         animateMessage(messageDiv);
+        if (!isSent) messageCount++;
     }
 
     // Add system message to UI
@@ -447,6 +460,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         messagesContainer.appendChild(messageDiv);
         animateMessage(messageDiv);
+        messageCount++;
     }
 
     // Animate message appearance
@@ -482,17 +496,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Track existing message IDs to prevent duplicates
     let existingMessageIds = new Set();
+    let messageCount = 0;
 
     // Initialize with existing messages
     function initializeExistingMessages() {
         // Get all message elements and extract any IDs we can find
         const messages = messagesContainer.querySelectorAll('.message-wrapper, .system-message');
+        messageCount = messages.length;
         messages.forEach((msg, index) => {
-            // Since we don't have actual message IDs in the DOM, we'll use content + timestamp as unique identifier
+            // Use a more reliable identifier: content + position
             const content = msg.querySelector('.message-content, .system-message-content');
-            const time = msg.querySelector('.message-time, .system-message-time');
-            if (content && time) {
-                const uniqueId = content.textContent.trim() + '|' + time.textContent.trim();
+            if (content) {
+                const uniqueId = content.textContent.trim() + '|' + index;
                 existingMessageIds.add(uniqueId);
             }
         });
@@ -516,9 +531,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Process messages in chronological order (reverse the array since API returns newest first)
                 const messagesInOrder = data.messages.reverse();
 
+                let newMessagesAdded = 0;
                 messagesInOrder.forEach(messageData => {
-                    // Create unique identifier for this message
-                    const uniqueId = messageData.content.trim() + '|' + messageData.created_at;
+                    // Create unique identifier for this message using actual message ID
+                    const uniqueId = messageData.id || (messageData.content.trim() + '|' + messageData.created_at);
 
                     // Skip if we already have this message
                     if (existingMessageIds.has(uniqueId)) {
@@ -529,15 +545,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     existingMessageIds.add(uniqueId);
 
                     // Only add messages from other users (not current user's own messages)
-                    if (!messageData.sender || messageData.sender.id !== {{ current_user_id }}) {
+                    if (!messageData.sender || messageData.sender.id != {{ current_user_id }}) {
                         if (messageData.message_type === 'system') {
                             addSystemMessageToUI(messageData);
                         } else {
                             addMessageToUI(messageData, false);
                         }
-                        scrollToBottom();
+                        newMessagesAdded++;
                     }
                 });
+                
+                if (newMessagesAdded > 0) {
+                    scrollToBottom();
+                }
             }
         })
         .catch(error => {
@@ -545,8 +565,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Start polling for new messages every 5 seconds
-    pollInterval = setInterval(pollForNewMessages, 5000);
+    // Start polling for new messages every 10 seconds (reduced frequency)
+    pollInterval = setInterval(pollForNewMessages, 10000);
 
     // Focus on message input
     messageInput.focus();
@@ -566,7 +586,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 clearInterval(pollInterval);
             }
         } else {
-            pollInterval = setInterval(pollForNewMessages, 5000);
+            pollInterval = setInterval(pollForNewMessages, 10000);
             pollForNewMessages(); // Poll immediately when page becomes visible
         }
     });
