@@ -19,7 +19,8 @@
       "Bash(python:*)",
       "Bash(git config:*)",
       "Bash(sudo apt:*)",
-      "Bash(sudo apt install:*)"
+      "Bash(sudo apt install:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []
